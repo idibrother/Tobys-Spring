@@ -10,15 +10,15 @@ import java.sql.*;
 public class UserDao {
 
     // 인터페이스를 도입함으로써 ConnectionMaker에 대한 구현체를 UserDao가 몰라도 된다.
-    private ConnectionMaker simpleConnectionMaker;
+    private ConnectionMaker connectionMaker;
 
-    public UserDao() {
-        // 하지만 여전히 구현체의 내용을 UserDao가 알고 있다는 구조상의 이슈가 있다.
-        simpleConnectionMaker = new NConnectionMaker();
+    public UserDao(ConnectionMaker connectionMaker) {
+        // connectionMaker 구현체를 사용자가 결정 할 수 있도록 UserDao 생성자에서 매개변수를 추가하였다.
+        this.connectionMaker = connectionMaker;
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        try(Connection conn = simpleConnectionMaker.makeConnection();
+        try(Connection conn = connectionMaker.makeConnection();
             PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")) {
 
             ps.setString(1, user.getId());

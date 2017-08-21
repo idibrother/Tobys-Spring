@@ -24,7 +24,9 @@ public class UserDaoTest {
     // h2 DB의 Driver를 클래스로더에 추가함.
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        userDao = new UserDao();
+        // 사용자가 ConnectionMaker 인터페이스를 구현해서 UserDao에 전달한다.
+        ConnectionMaker connectionMaker = new NConnectionMaker();
+        userDao = new UserDao(connectionMaker);
     }
 
     // 유닛 테스트마다 상호 독립적으로 수행 할 수 있도록 각 테스트를 실행 할 때 마다 테이블을 제거하고 새로 만듦.

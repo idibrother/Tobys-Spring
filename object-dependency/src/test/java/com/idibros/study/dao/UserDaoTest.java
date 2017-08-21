@@ -25,7 +25,7 @@ public class UserDaoTest {
     @BeforeClass
     public static void init() throws ClassNotFoundException {
         Class.forName("org.h2.Driver");
-        userDao = new UserDao();
+        userDao = new NUserDao();
     }
 
     // 유닛 테스트마다 상호 독립적으로 수행 할 수 있도록 각 테스트를 실행 할 때 마다 테이블을 제거하고 새로 만듦.

@@ -4,3 +4,5 @@ object-dependency/gradle/
 object-dependency/gradlew
 object-dependency/gradlew.bat
 object-dependency/settings.gradle
+*.class
+*.iml

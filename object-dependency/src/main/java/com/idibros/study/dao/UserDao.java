@@ -11,7 +11,7 @@ public class UserDao {
 
     public void add(User user) throws ClassNotFoundException, SQLException {
         Class.forName("org.h2.Driver");
-        try(Connection conn = DriverManager.getConnection("jdbc:h2:~/object-dependency", "", "");
+        try(Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")) {
 
             ps.setString(1, user.getId());
@@ -25,7 +25,7 @@ public class UserDao {
     public User get(String id) throws ClassNotFoundException, SQLException {
         Class.forName("org.h2.Driver");
         User user = new User();
-        try(Connection conn = DriverManager.getConnection("jdbc:h2:~/object-dependency", "", "");
+        try(Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement("select * from users where id = ?")) {
 
             ps.setString(1, id);
@@ -40,5 +40,10 @@ public class UserDao {
         }
 
         return user;
+    }
+
+    // connection의 분리
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:h2:~/object-dependency", "", "");
     }
 }

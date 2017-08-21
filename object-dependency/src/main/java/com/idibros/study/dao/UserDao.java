@@ -9,9 +9,15 @@ import java.sql.*;
  */
 public class UserDao {
 
+    private SimpleConnectionMaker simpleConnectionMaker;
+
+    public UserDao() {
+        // 이슈 2. 다른 ConnectionMaker를 구현하면 UserDao를 수정해야 한다.
+        simpleConnectionMaker = new SimpleConnectionMaker();
+    }
+
     public void add(User user) throws ClassNotFoundException, SQLException {
-        Class.forName("org.h2.Driver");
-        try(Connection conn = DriverManager.getConnection("jdbc:h2:~/object-dependency", "", "");
+        try(Connection conn = simpleConnectionMaker.makeNewConnection();
             PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")) {
 
             ps.setString(1, user.getId());

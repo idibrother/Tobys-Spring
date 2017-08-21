@@ -24,7 +24,6 @@ public class UserDaoTest {
     // h2 DB의 Driver를 클래스로더에 추가함.
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        Class.forName("org.h2.Driver");
         userDao = new UserDao();
     }
 

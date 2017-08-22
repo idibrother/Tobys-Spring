@@ -5,6 +5,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,13 +25,9 @@ public class UserDaoTest {
 
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        // 사용자가 구현체를 알고 있어도 되지만,
-        // 이런 책임을 직접 담당하도록 하는 것 보다는 ConnectionMaker와 DAO의 관계를 맺어주는 책임을 다른 클래스한테 넘겼다.(DaoFactory)
-        // 그래서 사용자가 UserDao가 어떻게 초기화되는지 신경쓰지 않은 구조가 되었다.
-        // 사용자가 사용 할 객체를 능동적으로 생성해서 사용하는 형태인 라이브러리가 아니고
-        // DaoFactory(IoC 개념을 적용한 객체 생성 및 객체간의 관계를 설정을 담당)가 만들어주는 객체를 사용하는 수동적인 구조로 바꼈다.
-        // 이것이 제어의 역전(inversion of controll)이다.
-        userDao = new DaoFactory().userDao();
+        // DaoFactory를 스프링 어플리케이션 컨택스트로 변경 후 객체의 생성과 관계의 설정하는 역할을 맡겼다.
+        ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+        userDao = context.getBean("userDao", UserDao.class);
     }
 
     // 유닛 테스트마다 상호 독립적으로 수행 할 수 있도록 각 테스트를 실행 할 때 마다 테이블을 제거하고 새로 만듦.

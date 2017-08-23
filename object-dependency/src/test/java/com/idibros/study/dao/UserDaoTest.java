@@ -21,13 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class UserDaoTest {
 
-    private static UserDao userDao;
-
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        // DaoFactory를 스프링 어플리케이션 컨택스트로 변경 후 객체의 생성과 관계의 설정하는 역할을 맡겼다.
-        ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-        userDao = context.getBean("userDao", UserDao.class);
     }
 
     // 유닛 테스트마다 상호 독립적으로 수행 할 수 있도록 각 테스트를 실행 할 때 마다 테이블을 제거하고 새로 만듦.
@@ -44,28 +39,11 @@ public class UserDaoTest {
     }
 
     @Test
-    public void add() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
-    }
-
-    @Test
-    public void get() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
-
-        User result = userDao.get(user.getId());
-        assertThat(result.getId(), is(user.getId()));
-        assertThat(result.getName(), is(user.getName()));
-        assertThat(result.getPassword(), is(user.getPassword()));
+    public void prototype_scope() throws SQLException, ClassNotFoundException {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(DaoFactory.class);
+        UserDao userDao = applicationContext.getBean("userDao", UserDao.class);
+        UserDao userDao1 = applicationContext.getBean("userDao", UserDao.class);
+        assertThat(userDao.equals(userDao1), is(false));
     }
 
     @After

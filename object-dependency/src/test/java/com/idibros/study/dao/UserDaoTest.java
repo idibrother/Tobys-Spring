@@ -23,10 +23,12 @@ public class UserDaoTest {
 
     private static UserDao userDao;
 
+    private static ApplicationContext context;
+
     @BeforeClass
     public static void init() throws ClassNotFoundException {
         // DaoFactory를 스프링 어플리케이션 컨택스트로 변경 후 객체의 생성과 관계의 설정하는 역할을 맡겼다.
-        ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+        context = new AnnotationConfigApplicationContext(CountingDaoFactory.class);
         userDao = context.getBean("userDao", UserDao.class);
     }
 
@@ -44,17 +46,7 @@ public class UserDaoTest {
     }
 
     @Test
-    public void add() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
-    }
-
-    @Test
-    public void get() throws SQLException, ClassNotFoundException {
+    public void testCountingConnection() throws SQLException, ClassNotFoundException {
         User user = new User();
         user.setId("foo");
         user.setName("idibros");
@@ -66,6 +58,9 @@ public class UserDaoTest {
         assertThat(result.getId(), is(user.getId()));
         assertThat(result.getName(), is(user.getName()));
         assertThat(result.getPassword(), is(user.getPassword()));
+
+        CountingConnectionMaker connectionMaker = context.getBean("connectionMaker", CountingConnectionMaker.class);
+        assertThat(connectionMaker.getCounter(), is(2));
     }
 
     @After

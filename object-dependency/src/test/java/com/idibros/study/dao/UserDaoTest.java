@@ -1,10 +1,11 @@
 package com.idibros.study.dao;
 
-import com.idibros.study.dto.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,13 +24,6 @@ public class UserDaoTest {
 
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        // 사용자가 구현체를 알고 있어도 되지만,
-        // 이런 책임을 직접 담당하도록 하는 것 보다는 ConnectionMaker와 DAO의 관계를 맺어주는 책임을 다른 클래스한테 넘겼다.(DaoFactory)
-        // 그래서 사용자가 UserDao가 어떻게 초기화되는지 신경쓰지 않은 구조가 되었다.
-        // 사용자가 사용 할 객체를 능동적으로 생성해서 사용하는 형태인 라이브러리가 아니고
-        // DaoFactory(IoC 개념을 적용한 객체 생성 및 객체간의 관계를 설정을 담당)가 만들어주는 객체를 사용하는 수동적인 구조로 바꼈다.
-        // 이것이 제어의 역전(inversion of controll)이다.
-        userDao = new DaoFactory().userDao();
     }
 
     // 유닛 테스트마다 상호 독립적으로 수행 할 수 있도록 각 테스트를 실행 할 때 마다 테이블을 제거하고 새로 만듦.
@@ -46,28 +40,28 @@ public class UserDaoTest {
     }
 
     @Test
-    public void add() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
+    /**
+     * 동등성 테스트
+     * DaoFactory는 스프링을 사용 할 때와 사용하지 않을 때 비슷한 형태로 보인다.
+     * 다만, 스프링을 사용하지 않을 때는 두 개의 다른 객체 참조를 만들고 각각은 다른 객체이다.
+     */
+    public void equivalent_test() throws SQLException, ClassNotFoundException {
+        DaoFactory daoFactory = new DaoFactory();
+        AccountDao accountDao = daoFactory.accountDao();
+        AccountDao accountDao1 = daoFactory.accountDao();
+        assertThat(accountDao.equals(accountDao1), is(false));
     }
 
     @Test
-    public void get() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
-
-        User result = userDao.get(user.getId());
-        assertThat(result.getId(), is(user.getId()));
-        assertThat(result.getName(), is(user.getName()));
-        assertThat(result.getPassword(), is(user.getPassword()));
+    /**
+     * 동일성 테스트
+     * 스피링을 사용해서 DaoFactory를 구현 할 경우 동일한 객체에 여러 참조가 있는 형태이다.
+     */
+    public void identity_test() throws SQLException, ClassNotFoundException {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(DaoFactorySpring.class);
+        UserDao userDao = applicationContext.getBean("userDao", UserDao.class);
+        UserDao userDao1 = applicationContext.getBean("userDao", UserDao.class);
+        assertThat(userDao.equals(userDao1), is(true));
     }
 
     @After

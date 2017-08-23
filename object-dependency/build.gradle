@@ -21,5 +21,7 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-core', version: '4.3.10.RELEASE'
     // https://mvnrepository.com/artifact/org.springframework/spring-beans
     compile group: 'org.springframework', name: 'spring-beans', version: '4.3.10.RELEASE'
+    // https://mvnrepository.com/artifact/org.springframework/spring-jdbc
+    compile group: 'org.springframework', name: 'spring-jdbc', version: '4.3.10.RELEASE'
 
 }

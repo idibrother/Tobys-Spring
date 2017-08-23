@@ -2,6 +2,7 @@ package com.idibros.study.dao;
 
 import com.idibros.study.dto.User;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,16 +13,16 @@ import java.sql.SQLException;
  */
 public class UserDao {
 
-    // 인터페이스를 도입함으로써 ConnectionMaker에 대한 구현체를 UserDao가 몰라도 된다.
-    private ConnectionMaker connectionMaker;
+    // DB Connection 외에 다른 기능을 가진 DataSource 인터페이스로 변경하였다.
+    // 다양한 방법으로 DB Connection을 생성하는 구현체들이 있으므로 이를 활용하면 훨씬 범용적으로 사용 할 수 있을 것 같다.
+    private DataSource dataSource;
 
-    public UserDao(ConnectionMaker connectionMaker) {
-        // connectionMaker 구현체를 사용자가 결정 할 수 있도록 UserDao 생성자에서 매개변수를 추가하였다.
-        this.connectionMaker = connectionMaker;
+    public UserDao(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        try(Connection conn = connectionMaker.makeConnection();
+        try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")) {
 
             ps.setString(1, user.getId());
@@ -34,7 +35,7 @@ public class UserDao {
 
     public User get(String id) throws ClassNotFoundException, SQLException {
         User user = new User();
-        try(Connection conn = connectionMaker.makeConnection();
+        try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement("select * from users where id = ?")) {
 
             ps.setString(1, id);

@@ -1,6 +1,7 @@
 package com.idibros.study.dao;
 
 import com.idibros.study.dto.User;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -21,7 +22,7 @@ public class UserDao {
         this.dataSource = dataSource;
     }
 
-    public void add(User user) throws ClassNotFoundException, SQLException {
+    public void add(User user) throws SQLException {
         try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")) {
 
@@ -33,20 +34,28 @@ public class UserDao {
         }
     }
 
-    public User get(String id) throws ClassNotFoundException, SQLException {
-        User user = new User();
+    public User get(String id) throws SQLException {
+        User user = null;
         try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement("select * from users where id = ?")) {
 
             ps.setString(1, id);
 
             try(ResultSet rs = ps.executeQuery()) {
-                rs.next();
 
-                user.setId(rs.getString("id"));
-                user.setName(rs.getString("name"));
-                user.setPassword(rs.getString("password"));
+                // 쿼리 실행 결과 데이터가 있을 경우만 user를 생성 후에 리턴 해준다.
+                if (rs.next()) {
+                    user = new User();
+                    user.setId(rs.getString("id"));
+                    user.setName(rs.getString("name"));
+                    user.setPassword(rs.getString("password"));
+                }
             }
+        }
+
+        // user가 없을 경우 예외를 발생시키도록 보완하였다.
+        if (user == null) {
+            throw new EmptyResultDataAccessException(1);
         }
 
         return user;
@@ -57,6 +66,20 @@ public class UserDao {
             PreparedStatement ps = conn.prepareStatement("delete from users")) {
 
             ps.executeUpdate();
+        }
+    }
+
+    public int getCount() throws SQLException {
+        try(Connection conn = dataSource.getConnection();
+            PreparedStatement ps = conn.prepareStatement("select count(*) from users")) {
+
+            try(ResultSet rs = ps.executeQuery()) {
+                rs.next();
+
+                int count = rs.getInt(1);
+
+                return count;
+            }
         }
     }
 }

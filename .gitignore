@@ -6,3 +6,10 @@ object-dependency/gradlew.bat
 object-dependency/settings.gradle
 *.class
 *.iml
+test/.gradle/
+test/gradlew
+test/gradle/
+test/build/
+test/.idea/
+test/gradlew.bat
+test/settings.gradle

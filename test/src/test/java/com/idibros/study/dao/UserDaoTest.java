@@ -1,5 +1,6 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.TestDaoContext;
 import com.idibros.study.dto.User;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Created by dongba on 2017-08-21.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DaoFactory.class)
+@ContextConfiguration(classes = TestDaoContext.class)
 public class UserDaoTest {
 
     @Autowired

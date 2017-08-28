@@ -19,7 +19,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Created by dongba on 2017-08-21.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestDaoContext.class)
 public class UserDaoTest {
 
     @Autowired

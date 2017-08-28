@@ -17,7 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by dongba on 2017-08-21.
  */
+// 테스트용 컨텍스트를 생성하고 관리하는 역할 담당
 @RunWith(SpringJUnit4ClassRunner.class)
+// 테스트용 컨텍스트 설정 파일이나 클래스를 지정함
 @ContextConfiguration(classes = DaoFactory.class)
 public class UserDaoTest {
 

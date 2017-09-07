@@ -13,12 +13,6 @@ import java.sql.SQLException;
 /**
  * Created by dongba on 2017-09-07.
  */
-
-/**
- * 2. 그리고 각 메소드마다 전략을 적용하여 중복을 제거하였다.
- * 하지만 각 메소드마다 전략의 구현체를 알고 있는 구조이기 때문에 전략 패턴이나 OCP 패턴에 적절하지 않다.
- * 그래서 구현체를 생성하고, 구조를 설정하는 부분을 jdbcContext에 위임하는 구조로 변경해볼 예정이다.
- */
 public class UserDao {
 
     private Logger logger = LoggerFactory.getLogger(UserDao.class);
@@ -32,27 +26,32 @@ public class UserDao {
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        StatementStrategy statement = new AddStatement();
-        try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = statement.makePreparedStatement(conn)) {
-
-            ps.setString(1, user.getId());
-            ps.setString(2, user.getName());
-            ps.setString(3, user.getPassword());
-
-            ps.executeUpdate();
-        }
+        /**
+         * 2. 아직 user가 전략에 넘어가지 않았다.
+         */
+        StatementStrategy strategy = new AddStatement();
+        jdbcContextWithStatementStrategy(strategy);
+//        try(Connection conn = dataSource.getConnection();
+//            PreparedStatement ps = strategy.makePreparedStatement(conn)) {
+//
+//            ps.setString(1, user.getId());
+//            ps.setString(2, user.getName());
+//            ps.setString(3, user.getPassword());
+//
+//            ps.executeUpdate();
+//        }
     }
 
     public void deleteAll() throws SQLException {
-        StatementStrategy statement = new DeleteAllStatement();
-        try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = statement.makePreparedStatement(conn)) {
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            logger.error(e.getMessage());
-            throw e;
-        }
+        StatementStrategy strategy = new DeleteAllStatement();
+        jdbcContextWithStatementStrategy(strategy);
+//        try(Connection conn = dataSource.getConnection();
+//            PreparedStatement ps = strategy.makePreparedStatement(conn)) {
+//            ps.executeUpdate();
+//        } catch (SQLException e) {
+//            logger.error(e.getMessage());
+//            throw e;
+//        }
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
@@ -73,6 +72,20 @@ public class UserDao {
         }
 
         return user;
+    }
+
+    /**
+     * 1. connection을 가져오고, ps생성, 쿼리 실행 부분, 예외처리 부분이 중복이다.
+     * 일단 메소드로 분리해봤다.
+     */
+    public void jdbcContextWithStatementStrategy(StatementStrategy strategy) throws SQLException {
+        try(Connection conn = dataSource.getConnection();
+            PreparedStatement ps = strategy.makePreparedStatement(conn)) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            throw e;
+        }
     }
 
 }

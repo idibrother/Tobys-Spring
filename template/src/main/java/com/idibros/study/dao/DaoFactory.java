@@ -14,9 +14,21 @@ import javax.sql.DataSource;
 public class DaoFactory {
 
     @Bean
-    public UserDao userDao() {
-        UserDao userDao = new UserDao(dataSource());
-        return userDao;
+    public UserDaoDeleteAll userDaoDeleteAll() {
+        UserDaoDeleteAll userDaoDeleteAll = new UserDaoDeleteAll(dataSource());
+        return userDaoDeleteAll;
+    }
+
+    @Bean
+    public UserDaoAdd userDaoAdd() {
+        UserDaoAdd userDaoAdd = new UserDaoAdd(dataSource());
+        return userDaoAdd;
+    }
+
+    @Bean
+    public UserDaoGet userDaoGet() {
+        UserDaoGet userDaoGet = new UserDaoGet(dataSource());
+        return userDaoGet;
     }
 
     @Bean

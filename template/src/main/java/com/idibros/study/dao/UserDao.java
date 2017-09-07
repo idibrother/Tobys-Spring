@@ -57,9 +57,15 @@ public class UserDao {
     }
 
     public void deleteAll() throws SQLException {
+//        /**
+//         * 2. catch-finally 구문으로 처리해도 되지만 JDK7부터 추가된
+//         * Closable 인터페이스의 구현체들은 아래와 같이 try문 뒤 괄호 안에 넣으면 같은 효과가 있다.
+//         */
         /**
-         * 2. catch-finally 구문으로 처리해도 되지만 JDK7부터 추가된
-         * Closable 인터페이스의 구현체들은 아래와 같이 try문 뒤 괄호 안에 넣으면 같은 효과가 있다.
+         * 아래와 같은 예외 처리 부분은 모든 메소드에서 반복해서 보이고,
+         * 메소드 수가 증가하거나 다른 클래스에서도 동일한 형태가 반복될 경우 코드 누락이 있을 경우
+         * 같은 이슈가 발생 할 가능성이 있다.
+         * 그래서 우선 메소드로 분리 해 볼 것이다.
          */
         try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = conn.prepareStatement("delete from users")) {
@@ -69,12 +75,12 @@ public class UserDao {
             throw e;
         }
 
-        /**
-         * 1. 위 문장 실행 중에 예외가 발생하면 connection과 ps의 close가 실행이 안된 상태로 종료한다.
-         * 예외가 여러 번 반복 할 경우 가용한 connection 갯수가 줄어들게 되고,
-         * 어느 순간 가용 connection이 없을 수도 있다.
-         * 그래서 예외가 발생해도 문제가 없도록 만들어야 한다.
-         */
+//        /**
+//         * 1. 위 문장 실행 중에 예외가 발생하면 connection과 ps의 close가 실행이 안된 상태로 종료한다.
+//         * 예외가 여러 번 반복 할 경우 가용한 connection 갯수가 줄어들게 되고,
+//         * 어느 순간 가용 connection이 없을 수도 있다.
+//         * 그래서 예외가 발생해도 문제가 없도록 만들어야 한다.
+//         */
 //        ps.close();
 //        conn.close();
     }

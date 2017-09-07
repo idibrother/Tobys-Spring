@@ -26,7 +26,7 @@ public class CalculatorTest {
     @Before
     public void init() {
         /**
-         * 4. 테스트 코드에서도 반복해서 사용하는 객체는 Before 어노테이션 메소드에서 생성해서 초기화한다.
+         * 테스트 코드에서도 반복해서 사용하는 객체는 Before 어노테이션 메소드에서 생성해서 초기화한다.
          */
         Path path = Paths.get("src/test/resources", "numbers.txt");
         filePath = path.toString();
@@ -38,6 +38,13 @@ public class CalculatorTest {
         int sum = calculator.calcSum(filePath);
 
         assertThat(sum, is(10));
+    }
+
+    @Test
+    public void multOfNumbers() throws IOException {
+        int mult = calculator.calcMult(filePath);
+
+        assertThat(mult, is(24));
     }
 
 }

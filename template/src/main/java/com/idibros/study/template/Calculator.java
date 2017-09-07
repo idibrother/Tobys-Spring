@@ -15,9 +15,9 @@ public class Calculator {
     private Logger logger = LoggerFactory.getLogger(Calculator.class);
 
     public int calcSum(String filePath) throws IOException {
-        /**
-         * 1. 중복 코드를 검토한다.
-         */
+//        /**
+//         * 1. 중복 코드를 검토한다.
+//         */
 //        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 //            int sum = 0;
 //            String line = null;
@@ -30,9 +30,9 @@ public class Calculator {
 //            throw e;
 //        }
 
-        /**
-         * 3. 변경되는 부분을 callback으로 분리한다.
-         */
+//        /**
+//         * 3. 변경되는 부분을 callback으로 분리한다.
+//         */
         BufferedReaderCallback callback = new BufferedReaderCallback() {
             @Override
             public int doSomethingWithReader(BufferedReader br) throws IOException {
@@ -45,12 +45,34 @@ public class Calculator {
             }
         };
 
-        /**
-         * 2. 중복 코드는 템플릿으로 생성하고,
-         */
+//        /**
+//         * 2. 중복 코드는 템플릿으로 생성하고,
+//         */
         int result = fileReadTemplate(filePath, callback);
 
         return result;
+    }
+
+    public int calcMult(String filePath) throws IOException {
+        /**
+         * 1. 추가되는 메소드에 대해서 변경되는 부분인 콜백을 생성하고
+         */
+        BufferedReaderCallback callback = new BufferedReaderCallback() {
+            @Override
+            public int doSomethingWithReader(BufferedReader br) throws IOException {
+                int result = 1;
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    result *= Integer.valueOf(line);
+                }
+                return result;
+            }
+        };
+
+        /**
+         * 2. 템플릿에 전달하여 처리한다.
+         */
+        return fileReadTemplate(filePath, callback);
     }
 
     public int fileReadTemplate(String filePath, BufferedReaderCallback callback) throws IOException {
@@ -62,5 +84,4 @@ public class Calculator {
             throw e;
         }
     }
-
 }

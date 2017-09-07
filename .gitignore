@@ -4,3 +4,4 @@ template/gradle/
 template/.idea/
 template/gradlew.bat
 template/settings.gradle
+template/build/

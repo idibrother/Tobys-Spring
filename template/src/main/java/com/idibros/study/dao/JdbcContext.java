@@ -28,4 +28,21 @@ public class JdbcContext {
             throw e;
         }
     }
+
+    public void executeSql (final String sql) throws SQLException {
+        /**
+         * 1. 콜백과 템플릿을 결합하고,
+         */
+        StatementStrategy strategy = new StatementStrategy() {
+
+            @Override
+            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
+                PreparedStatement ps = conn.prepareStatement(sql);
+                return ps;
+            }
+
+        };
+
+        workWithStatementStrategy(strategy);
+    }
 }

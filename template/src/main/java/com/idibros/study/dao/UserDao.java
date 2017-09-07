@@ -46,26 +46,9 @@ public class UserDao {
 
     public void deleteAll() throws SQLException {
         /**
-         * 1. 콜백 생성과 실행 부분을 메소드로 분리하고,
+         * 2. 템플릿을 통해 콜백을 실행한다.
          */
-        executeSql("delete from users");
-    }
-
-    private void executeSql (final String sql) throws SQLException {
-        /**
-         * 2. 익명 클래스 내부에서 사용하는 변수는 final이어야 한다.
-         */
-        StatementStrategy strategy = new StatementStrategy() {
-
-            @Override
-            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
-                PreparedStatement ps = conn.prepareStatement(sql);
-                return ps;
-            }
-
-        };
-
-        this.jdbcContext.workWithStatementStrategy(strategy);
+        jdbcContext.executeSql("delete from users");
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {

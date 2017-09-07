@@ -27,15 +27,30 @@ public class UserDao {
 
     public void add(User user) throws ClassNotFoundException, SQLException {
         /**
-         * 1. 전략에 추가정보를 전달 할 때는 setter나 생성자를 활용한다.
+         * 1. 전략을 활용하는 UserDao에서 익명 클래스로 전략을 주입하는 구조로 변경해본다.
          */
-        StatementStrategy strategy = new AddStatement(user);
-        jdbcContextWithStatementStrategy(strategy);
+        jdbcContextWithStatementStrategy(new StatementStrategy() {
+
+            @Override
+            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
+                PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+                return ps;
+            }
+
+        });
     }
 
     public void deleteAll() throws SQLException {
-        StatementStrategy strategy = new DeleteAllStatement();
-        jdbcContextWithStatementStrategy(strategy);
+        jdbcContextWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
+                PreparedStatement ps = conn.prepareStatement("delete from users");
+                return ps;
+            }
+        });
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {

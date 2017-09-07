@@ -16,7 +16,18 @@ public class DaoFactory {
     @Bean
     public UserDao userDao() {
         UserDao userDao = new UserDao(dataSource());
+        /**
+         * 2. 의존관계를 추가하였다.
+         */
+        userDao.setJdbcContext(jdbcContext());
         return userDao;
+    }
+
+    @Bean
+    public JdbcContext jdbcContext() {
+        JdbcContext jdbcContext = new JdbcContext();
+        jdbcContext.setDataSource(dataSource());
+        return jdbcContext;
     }
 
     @Bean

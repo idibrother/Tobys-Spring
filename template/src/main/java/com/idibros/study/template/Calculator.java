@@ -35,49 +35,45 @@ public class Calculator {
 //         */
         BufferedReaderCallback callback = new BufferedReaderCallback() {
             @Override
-            public int doSomethingWithReader(BufferedReader br) throws IOException {
-                int sum = 0;
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    sum += Integer.valueOf(line);
-                }
-                return sum;
+            public int doSomethingWithReader(BufferedReader br, int result, String nextLine) throws IOException {
+                return result + Integer.valueOf(nextLine);
             }
         };
 
 //        /**
 //         * 2. 중복 코드는 템플릿으로 생성하고,
 //         */
-        int result = fileReadTemplate(filePath, callback);
+        int result = fileReadTemplate(filePath, callback, 0);
 
         return result;
     }
 
     public int calcMult(String filePath) throws IOException {
         /**
-         * 1. 추가되는 메소드에 대해서 변경되는 부분인 콜백을 생성하고
+         * 1. 또 중복 코드가 있는지 검토하고,
          */
         BufferedReaderCallback callback = new BufferedReaderCallback() {
+            /**
+             * result의 초기값과 연산 부분을 제외하고 중복이다.
+             */
             @Override
-            public int doSomethingWithReader(BufferedReader br) throws IOException {
-                int result = 1;
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    result *= Integer.valueOf(line);
-                }
-                return result;
+            public int doSomethingWithReader(BufferedReader br, int result, String nextLine) throws IOException {
+                return result * Integer.valueOf(nextLine);
             }
         };
 
         /**
          * 2. 템플릿에 전달하여 처리한다.
          */
-        return fileReadTemplate(filePath, callback);
+        return fileReadTemplate(filePath, callback, 1);
     }
 
-    public int fileReadTemplate(String filePath, BufferedReaderCallback callback) throws IOException {
+    public int fileReadTemplate(String filePath, BufferedReaderCallback callback, int result) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            int result = callback.doSomethingWithReader(br);
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                result = callback.doSomethingWithReader(br, result, line);
+            }
             return result;
         } catch (IOException e) {
             logger.error(e.getMessage());

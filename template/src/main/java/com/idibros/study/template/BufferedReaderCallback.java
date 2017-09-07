@@ -8,6 +8,6 @@ import java.io.IOException;
  */
 public interface BufferedReaderCallback {
 
-    int doSomethingWithReader(BufferedReader br) throws IOException;
+    int doSomethingWithReader(BufferedReader br, int result, String nextLine) throws IOException;
 
 }

@@ -41,6 +41,13 @@ public class CalculatorTest {
     }
 
     @Test
+    public void concOfNumbers() throws IOException {
+        String result = calculator.concOfNumbers(filePath);
+
+        assertThat(result, is("1234"));
+    }
+
+    @Test
     public void multOfNumbers() throws IOException {
         int mult = calculator.calcMult(filePath);
 

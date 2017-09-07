@@ -33,9 +33,9 @@ public class Calculator {
 //        /**
 //         * 3. 변경되는 부분을 callback으로 분리한다.
 //         */
-        BufferedReaderCallback callback = new BufferedReaderCallback() {
+        BufferedReaderCallback callback = new BufferedReaderCallback<Integer>() {
             @Override
-            public int doSomethingWithReader(BufferedReader br, int result, String nextLine) throws IOException {
+            public Integer doSomethingWithReader(BufferedReader br, Integer result, String nextLine) throws IOException {
                 return result + Integer.valueOf(nextLine);
             }
         };
@@ -49,26 +49,31 @@ public class Calculator {
     }
 
     public int calcMult(String filePath) throws IOException {
-        /**
-         * 1. 또 중복 코드가 있는지 검토하고,
-         */
-        BufferedReaderCallback callback = new BufferedReaderCallback() {
-            /**
-             * result의 초기값과 연산 부분을 제외하고 중복이다.
-             */
+        BufferedReaderCallback callback = new BufferedReaderCallback<Integer>() {
             @Override
-            public int doSomethingWithReader(BufferedReader br, int result, String nextLine) throws IOException {
+            public Integer doSomethingWithReader(BufferedReader br, Integer result, String nextLine) throws IOException {
                 return result * Integer.valueOf(nextLine);
             }
         };
 
-        /**
-         * 2. 템플릿에 전달하여 처리한다.
-         */
         return fileReadTemplate(filePath, callback, 1);
     }
 
-    public int fileReadTemplate(String filePath, BufferedReaderCallback callback, int result) throws IOException {
+    public String concOfNumbers(String filePath) throws IOException {
+        BufferedReaderCallback callback = new BufferedReaderCallback<String>() {
+            @Override
+            public String doSomethingWithReader(BufferedReader br, String result, String nextLine) throws IOException {
+                return result + nextLine;
+            }
+        };
+
+        return fileReadTemplate(filePath, callback, "");
+    }
+
+    /**
+     * 2. 콜백의 연산 결과를 리턴하는 템플릿에도 제네릭을 적용한다.
+     */
+    public <T> T fileReadTemplate(String filePath, BufferedReaderCallback<T> callback, T result) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line = null;
             while ((line = br.readLine()) != null) {
@@ -80,4 +85,5 @@ public class Calculator {
             throw e;
         }
     }
+
 }

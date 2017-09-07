@@ -61,14 +61,14 @@ public class UserDao {
 //         * 2. catch-finally 구문으로 처리해도 되지만 JDK7부터 추가된
 //         * Closable 인터페이스의 구현체들은 아래와 같이 try문 뒤 괄호 안에 넣으면 같은 효과가 있다.
 //         */
-        /**
-         * 아래와 같은 예외 처리 부분은 모든 메소드에서 반복해서 보이고,
-         * 메소드 수가 증가하거나 다른 클래스에서도 동일한 형태가 반복될 경우 코드 누락이 있을 경우
-         * 같은 이슈가 발생 할 가능성이 있다.
-         * 그래서 우선 메소드로 분리 해 볼 것이다.
-         */
+//        /**
+//         * 아래와 같은 예외 처리 부분은 모든 메소드에서 반복해서 보이고,
+//         * 메소드 수가 증가하거나 다른 클래스에서도 동일한 형태가 반복될 경우 코드 누락이 있을 경우
+//         * 같은 이슈가 발생 할 가능성이 있다.
+//         * 그래서 우선 메소드로 분리 해 볼 것이다.
+//         */
         try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = conn.prepareStatement("delete from users")) {
+            PreparedStatement ps = makeStatement(conn)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.error(e.getMessage());
@@ -83,5 +83,13 @@ public class UserDao {
 //         */
 //        ps.close();
 //        conn.close();
+    }
+
+    /**
+     * 1. 우선 메소드로 분리를 시도한다.
+     */
+    private PreparedStatement makeStatement(Connection conn) throws SQLException {
+        PreparedStatement ps = conn.prepareStatement("delete from users");
+        return ps;
     }
 }

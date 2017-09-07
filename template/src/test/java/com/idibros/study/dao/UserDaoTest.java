@@ -27,7 +27,6 @@ public class UserDaoTest {
 
     @BeforeClass
     public static void init() throws ClassNotFoundException {
-        // DaoFactory를 스프링 어플리케이션 컨택스트로 변경 후 객체의 생성과 관계의 설정하는 역할을 맡겼다.
         ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
         dataSource = context.getBean("dataSource", DataSource.class);
         userDao = context.getBean("userDao", UserDao.class);
@@ -37,12 +36,13 @@ public class UserDaoTest {
     @Before
     public void setUp() throws ClassNotFoundException, SQLException {
         // table 생성
-        try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = conn.prepareStatement("create table users(id varchar(10) primary key," +
-                    " name varchar(20) not null," +
-                    " password varchar(10) not null)")) {
-            ps.executeUpdate();
-        }
+        userDao.deleteAll();
+//        try(Connection conn = dataSource.getConnection();
+//            PreparedStatement ps = conn.prepareStatement("create table users(id varchar(10) primary key," +
+//                    " name varchar(20) not null," +
+//                    " password varchar(10) not null)")) {
+//            ps.executeUpdate();
+//        }
 
     }
 
@@ -74,10 +74,10 @@ public class UserDaoTest {
     @After
     public void tearDown() throws SQLException {
         // 테이블 제거
-        try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = conn.prepareStatement("drop table users")) {
-            ps.executeUpdate();
-        }
+//        try(Connection conn = dataSource.getConnection();
+//            PreparedStatement ps = conn.prepareStatement("drop table users")) {
+//            ps.executeUpdate();
+//        }
     }
 
 }

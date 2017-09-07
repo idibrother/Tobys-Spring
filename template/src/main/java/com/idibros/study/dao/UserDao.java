@@ -1,6 +1,8 @@
 package com.idibros.study.dao;
 
 import com.idibros.study.dto.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -12,6 +14,8 @@ import java.sql.SQLException;
  * Created by dongba on 2017-08-21.
  */
 public class UserDao {
+
+    private Logger logger = LoggerFactory.getLogger(UserDao.class);
 
     // DB Connection 외에 다른 기능을 가진 DataSource 인터페이스로 변경하였다.
     // 다양한 방법으로 DB Connection을 생성하는 구현체들이 있으므로 이를 활용하면 훨씬 범용적으로 사용 할 수 있을 것 같다.
@@ -50,5 +54,28 @@ public class UserDao {
         }
 
         return user;
+    }
+
+    public void deleteAll() throws SQLException {
+        /**
+         * 2. catch-finally 구문으로 처리해도 되지만 JDK7부터 추가된
+         * Closable 인터페이스의 구현체들은 아래와 같이 try문 뒤 괄호 안에 넣으면 같은 효과가 있다.
+         */
+        try(Connection conn = dataSource.getConnection();
+            PreparedStatement ps = conn.prepareStatement("delete from users")) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            throw e;
+        }
+
+        /**
+         * 1. 위 문장 실행 중에 예외가 발생하면 connection과 ps의 close가 실행이 안된 상태로 종료한다.
+         * 예외가 여러 번 반복 할 경우 가용한 connection 갯수가 줄어들게 되고,
+         * 어느 순간 가용 connection이 없을 수도 있다.
+         * 그래서 예외가 발생해도 문제가 없도록 만들어야 한다.
+         */
+//        ps.close();
+//        conn.close();
     }
 }

@@ -27,31 +27,15 @@ public class UserDao {
 
     public void add(User user) throws ClassNotFoundException, SQLException {
         /**
-         * 2. 아직 user가 전략에 넘어가지 않았다.
+         * 1. 전략에 추가정보를 전달 할 때는 setter나 생성자를 활용한다.
          */
-        StatementStrategy strategy = new AddStatement();
+        StatementStrategy strategy = new AddStatement(user);
         jdbcContextWithStatementStrategy(strategy);
-//        try(Connection conn = dataSource.getConnection();
-//            PreparedStatement ps = strategy.makePreparedStatement(conn)) {
-//
-//            ps.setString(1, user.getId());
-//            ps.setString(2, user.getName());
-//            ps.setString(3, user.getPassword());
-//
-//            ps.executeUpdate();
-//        }
     }
 
     public void deleteAll() throws SQLException {
         StatementStrategy strategy = new DeleteAllStatement();
         jdbcContextWithStatementStrategy(strategy);
-//        try(Connection conn = dataSource.getConnection();
-//            PreparedStatement ps = strategy.makePreparedStatement(conn)) {
-//            ps.executeUpdate();
-//        } catch (SQLException e) {
-//            logger.error(e.getMessage());
-//            throw e;
-//        }
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
@@ -74,10 +58,6 @@ public class UserDao {
         return user;
     }
 
-    /**
-     * 1. connection을 가져오고, ps생성, 쿼리 실행 부분, 예외처리 부분이 중복이다.
-     * 일단 메소드로 분리해봤다.
-     */
     public void jdbcContextWithStatementStrategy(StatementStrategy strategy) throws SQLException {
         try(Connection conn = dataSource.getConnection();
             PreparedStatement ps = strategy.makePreparedStatement(conn)) {

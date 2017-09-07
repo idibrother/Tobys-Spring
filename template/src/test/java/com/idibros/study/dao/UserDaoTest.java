@@ -15,10 +15,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Created by dongba on 2017-08-21.
  */
-
-/**
- * 3. 그래서 테스트가 실패한다.
- */
 public class UserDaoTest {
 
     private static UserDao userDao;

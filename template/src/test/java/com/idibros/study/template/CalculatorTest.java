@@ -1,5 +1,6 @@
 package com.idibros.study.template;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +19,22 @@ public class CalculatorTest {
 
     private Logger logger = LoggerFactory.getLogger(CalculatorTest.class);
 
+    private String filePath;
+
+    private Calculator calculator;
+
+    @Before
+    public void init() {
+        /**
+         * 4. 테스트 코드에서도 반복해서 사용하는 객체는 Before 어노테이션 메소드에서 생성해서 초기화한다.
+         */
+        Path path = Paths.get("src/test/resources", "numbers.txt");
+        filePath = path.toString();
+        calculator = new Calculator();
+    }
+
     @Test
     public void sumOfNumbers() throws IOException {
-        Path path = Paths.get("src/test/resources", "numbers.txt");
-        String filePath = path.toString();
-
-        logger.info("################{}###################", filePath);
-
-        Calculator calculator = new Calculator();
         int sum = calculator.calcSum(filePath);
 
         assertThat(sum, is(10));

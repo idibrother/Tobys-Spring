@@ -5,10 +5,8 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -22,14 +20,6 @@ public class UserDao {
     @Setter
     private JdbcTemplate jdbcTemplate;
 
-    // DB Connection 외에 다른 기능을 가진 DataSource 인터페이스로 변경하였다.
-    // 다양한 방법으로 DB Connection을 생성하는 구현체들이 있으므로 이를 활용하면 훨씬 범용적으로 사용 할 수 있을 것 같다.
-    private DataSource dataSource;
-
-    public UserDao(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
     public void add(User user) throws ClassNotFoundException, SQLException {
         this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
                 user.getId(), user.getName(), user.getPassword());
@@ -40,32 +30,31 @@ public class UserDao {
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-        User user = new User();
-        StatementStrategy statement = new GetStatement();
-        try(Connection conn = dataSource.getConnection();
-            PreparedStatement ps = statement.makePreparedStatement(conn)) {
-
-            ps.setString(1, id);
-
-            try(ResultSet rs = ps.executeQuery()) {
-                rs.next();
-
-                user.setId(rs.getString("id"));
-                user.setName(rs.getString("name"));
-                user.setPassword(rs.getString("password"));
-            }
-        }
+        /**
+         * 1. JdbcTemplate를 활용하여 user 객체를 가져오도록 변경하였다.
+         * 2. queryForObject 함수에 SQL문과 조건문에서 사용할 변수, SQL 실행 결과를 역직렬화 할 mapper callback을 전달해서
+         *    user 객체를 조회한다.
+         */
+        User user = jdbcTemplate.queryForObject("select * from users where id = ?",
+                new Object[]{id},
+                new RowMapper<User>() {
+                    @Override
+                    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        /**
+                         * rs는 제일 첫 번 째 row를 가리키고 있으므로 rs.next를 별도로 호출 할 필요는 없다.
+                         */
+                        User user = new User();
+                        user.setId(rs.getString("id"));
+                        user.setName(rs.getString("name"));
+                        user.setPassword(rs.getString("password"));
+                        return user;
+                    }
+                });
 
         return user;
     }
 
     public int getCount() {
-//        /**
-//         * 1. callback 2개를 template에 전달해서 실행 한 결과를 getCount가 활용한다.
-//         */
-        /**
-         * 1. callback을 별도로 전달하지 않고 SQL만 넘겨도 실행 가능한 queryForObject 메소드를 활용하도록 변경한다.
-         */
         Integer result = this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
         return result;
     }

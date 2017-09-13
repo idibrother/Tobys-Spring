@@ -16,7 +16,7 @@ public class DaoFactory {
 
     @Bean
     public UserDao userDao() {
-        UserDao userDao = new UserDao(dataSource());
+        UserDao userDao = new UserDao();
         userDao.setJdbcTemplate(jdbcTemplate());
         return userDao;
     }
@@ -26,13 +26,6 @@ public class DaoFactory {
         JdbcTemplate jdbcTemplate = new JdbcTemplate();
         jdbcTemplate.setDataSource(dataSource());
         return jdbcTemplate;
-    }
-
-    @Bean
-    public JdbcContext jdbcContext() {
-        JdbcContext jdbcContext = new JdbcContext();
-        jdbcContext.setDataSource(dataSource());
-        return jdbcContext;
     }
 
     @Bean

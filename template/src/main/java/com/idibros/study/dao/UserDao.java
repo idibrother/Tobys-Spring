@@ -4,6 +4,8 @@ import com.idibros.study.dto.User;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,6 +22,9 @@ public class UserDao {
 
     @Setter
     private JdbcContext jdbcContext;
+
+    @Setter
+    private JdbcTemplate jdbcTemplate;
 
     // DB Connection 외에 다른 기능을 가진 DataSource 인터페이스로 변경하였다.
     // 다양한 방법으로 DB Connection을 생성하는 구현체들이 있으므로 이를 활용하면 훨씬 범용적으로 사용 할 수 있을 것 같다.
@@ -46,9 +51,14 @@ public class UserDao {
 
     public void deleteAll() throws SQLException {
         /**
-         * 2. 템플릿을 통해 콜백을 실행한다.
+         * 1. jdbcTemplate을 사용하도록 변경한다.
          */
-        jdbcContext.executeSql("delete from users");
+        jdbcTemplate.update(new PreparedStatementCreator() {
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                return con.prepareStatement("delete from users");
+            }
+        });
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {

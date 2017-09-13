@@ -2,6 +2,7 @@ package com.idibros.study.dao;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import javax.sql.DataSource;
@@ -16,8 +17,15 @@ public class DaoFactory {
     @Bean
     public UserDao userDao() {
         UserDao userDao = new UserDao(dataSource());
-        userDao.setJdbcContext(jdbcContext());
+        userDao.setJdbcTemplate(jdbcTemplate());
         return userDao;
+    }
+
+    @Bean
+    public JdbcTemplate jdbcTemplate() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate();
+        jdbcTemplate.setDataSource(dataSource());
+        return jdbcTemplate;
     }
 
     @Bean

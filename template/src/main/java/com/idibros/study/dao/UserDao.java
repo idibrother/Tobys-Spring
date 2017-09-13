@@ -4,10 +4,7 @@ import com.idibros.study.dto.User;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -63,21 +60,13 @@ public class UserDao {
     }
 
     public int getCount() {
+//        /**
+//         * 1. callback 2개를 template에 전달해서 실행 한 결과를 getCount가 활용한다.
+//         */
         /**
-         * 1. callback 2개를 template에 전달해서 실행 한 결과를 getCount가 활용한다.
+         * 1. callback을 별도로 전달하지 않고 SQL만 넘겨도 실행 가능한 queryForObject 메소드를 활용하도록 변경한다.
          */
-        Integer result = this.jdbcTemplate.query(new PreparedStatementCreator() {
-            @Override
-            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                return con.prepareStatement("select count(*) from users");
-            }
-        }, new ResultSetExtractor<Integer>() {
-            @Override
-            public Integer extractData(ResultSet rs) throws SQLException, DataAccessException {
-                rs.next();
-                return rs.getInt(1);
-            }
-        });
+        Integer result = this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
         return result;
     }
 }

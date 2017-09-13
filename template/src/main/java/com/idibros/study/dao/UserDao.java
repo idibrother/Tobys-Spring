@@ -14,12 +14,27 @@ import java.util.List;
 /**
  * Created by dongba on 2017-09-07.
  */
+
+/**
+ * 결과적으로 예외나 공통로직을 제외한 부분을 JdbcTemplate를 활용하도록 변경하여 UserDao가 깔끔해졌다.
+ */
 public class UserDao {
 
     private Logger logger = LoggerFactory.getLogger(UserDao.class);
 
     @Setter
     private JdbcTemplate jdbcTemplate;
+
+    private RowMapper<User> userMapper = new RowMapper<User>() {
+        @Override
+        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+            User user = new User();
+            user.setId(rs.getString("id"));
+            user.setName(rs.getString("name"));
+            user.setPassword(rs.getString("password"));
+            return user;
+        }
+    };
 
     public void add(User user) throws ClassNotFoundException, SQLException {
         this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
@@ -31,26 +46,8 @@ public class UserDao {
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-        /**
-         * 1. JdbcTemplate를 활용하여 user 객체를 가져오도록 변경하였다.
-         * 2. queryForObject 함수에 SQL문과 조건문에서 사용할 변수, SQL 실행 결과를 역직렬화 할 mapper callback을 전달해서
-         *    user 객체를 조회한다.
-         */
         User user = jdbcTemplate.queryForObject("select * from users where id = ?",
-                new Object[]{id},
-                new RowMapper<User>() {
-                    @Override
-                    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        /**
-                         * rs는 제일 첫 번 째 row를 가리키고 있으므로 rs.next를 별도로 호출 할 필요는 없다.
-                         */
-                        User user = new User();
-                        user.setId(rs.getString("id"));
-                        user.setName(rs.getString("name"));
-                        user.setPassword(rs.getString("password"));
-                        return user;
-                    }
-                });
+                new Object[]{id}, userMapper);
 
         return user;
     }
@@ -61,17 +58,7 @@ public class UserDao {
     }
 
     public List<User> getAll() {
-        List<User> result = this.jdbcTemplate.query("select * from users order by id",
-                new RowMapper<User>() {
-                    @Override
-                    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        User user = new User();
-                        user.setId(rs.getString("id"));
-                        user.setName(rs.getString("name"));
-                        user.setPassword(rs.getString("password"));
-                        return user;
-                    }
-                });
+        List<User> result = this.jdbcTemplate.query("select * from users order by id", userMapper);
         return result;
     }
 }

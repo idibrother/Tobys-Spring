@@ -4,7 +4,10 @@ import com.idibros.study.dto.User;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -31,23 +34,8 @@ public class UserDao {
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        /**
-         * 1. add 함수를 jdbcTemplate을 사용하도록 변경한다.
-         */
         this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
                 user.getId(), user.getName(), user.getPassword());
-//        this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-//
-//            @Override
-//            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
-//                PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
-//                ps.setString(1, user.getId());
-//                ps.setString(2, user.getName());
-//                ps.setString(3, user.getPassword());
-//                return ps;
-//            }
-//
-//        });
     }
 
     public void deleteAll() throws SQLException {
@@ -74,5 +62,23 @@ public class UserDao {
         return user;
     }
 
+    public int getCount() {
+        /**
+         * 1. callback 2개를 template에 전달해서 실행 한 결과를 getCount가 활용한다.
+         */
+        Integer result = this.jdbcTemplate.query(new PreparedStatementCreator() {
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                return con.prepareStatement("select count(*) from users");
+            }
+        }, new ResultSetExtractor<Integer>() {
+            @Override
+            public Integer extractData(ResultSet rs) throws SQLException, DataAccessException {
+                rs.next();
+                return rs.getInt(1);
+            }
+        });
+        return result;
+    }
 }
 

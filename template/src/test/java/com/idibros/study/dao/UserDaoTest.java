@@ -56,4 +56,25 @@ public class UserDaoTest {
         assertThat(result.getPassword(), is(user.getPassword()));
     }
 
+    @Test
+    public void getCount() throws SQLException, ClassNotFoundException {
+        User user = new User();
+        user.setId("foo");
+        user.setName("idibros");
+        user.setPassword("password");
+
+        userDao.add(user);
+        int count = userDao.getCount();
+        assertThat(count, is(1));
+
+        User user1 = new User();
+        user1.setId("foo1");
+        user1.setName("idibros1");
+        user1.setPassword("password1");
+
+        userDao.add(user1);
+        count = userDao.getCount();
+        assertThat(count, is(2));
+    }
+
 }

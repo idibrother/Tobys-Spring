@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by dongba on 2017-09-07.
@@ -56,6 +57,21 @@ public class UserDao {
 
     public int getCount() {
         Integer result = this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
+        return result;
+    }
+
+    public List<User> getAll() {
+        List<User> result = this.jdbcTemplate.query("select * from users order by id",
+                new RowMapper<User>() {
+                    @Override
+                    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        User user = new User();
+                        user.setId(rs.getString("id"));
+                        user.setName(rs.getString("name"));
+                        user.setPassword(rs.getString("password"));
+                        return user;
+                    }
+                });
         return result;
     }
 }

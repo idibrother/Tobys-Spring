@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -75,6 +76,70 @@ public class UserDaoTest {
         userDao.add(user1);
         count = userDao.getCount();
         assertThat(count, is(2));
+    }
+
+    @Test
+    public void getAll() throws SQLException, ClassNotFoundException {
+        /**
+         * 모든 유저 목록을 조회하는 기능을 추가한다.
+         */
+        User user1 = new User();
+        user1.setId("foo1");
+        user1.setName("idibros");
+        user1.setPassword("password");
+        userDao.add(user1);
+        int count = userDao.getCount();
+        assertThat(count, is(1));
+
+        List<User> userList = userDao.getAll();
+        User resultUser1 = userList.get(0);
+        checksumUser(user1, resultUser1);
+
+        /**
+         * 2. 두 번째 유저를 추가하고 검증한다.
+         */
+        User user2 = new User();
+        user2.setId("foo2");
+        user2.setName("idibros2");
+        user2.setPassword("password2");
+        userDao.add(user2);
+
+        count = userDao.getCount();
+        assertThat(count, is(2));
+
+        userList.clear();
+        userList.addAll(userDao.getAll());
+        resultUser1 = userList.get(0);
+        User resultUser2 = userList.get(1);
+        checksumUser(user1, resultUser1);
+        checksumUser(user2, resultUser2);
+
+        /**
+         * 3. 한번 더 실행해본다.
+         */
+        User user3 = new User();
+        user3.setId("foo3");
+        user3.setName("idibros3");
+        user3.setPassword("password3");
+        userDao.add(user3);
+
+        count = userDao.getCount();
+        assertThat(count, is(3));
+
+        userList.clear();
+        userList.addAll(userDao.getAll());
+        resultUser1 = userList.get(0);
+        resultUser2 = userList.get(1);
+        User resultUser3 = userList.get(2);
+        checksumUser(user1, resultUser1);
+        checksumUser(user2, resultUser2);
+        checksumUser(user3, resultUser3);
+    }
+
+    private void checksumUser(User user1, User resultUser1) {
+        assertThat(user1.getId(), is(resultUser1.getId()));
+        assertThat(user1.getName(), is(resultUser1.getName()));
+        assertThat(user1.getPassword(), is(resultUser1.getPassword()));
     }
 
 }

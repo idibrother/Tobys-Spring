@@ -20,9 +20,6 @@ public class UserDao {
     private Logger logger = LoggerFactory.getLogger(UserDao.class);
 
     @Setter
-    private JdbcContext jdbcContext;
-
-    @Setter
     private JdbcTemplate jdbcTemplate;
 
     // DB Connection 외에 다른 기능을 가진 DataSource 인터페이스로 변경하였다.
@@ -34,24 +31,26 @@ public class UserDao {
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-
-            @Override
-            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
-                PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
-                ps.setString(1, user.getId());
-                ps.setString(2, user.getName());
-                ps.setString(3, user.getPassword());
-                return ps;
-            }
-
-        });
+        /**
+         * 1. add 함수를 jdbcTemplate을 사용하도록 변경한다.
+         */
+        this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
+                user.getId(), user.getName(), user.getPassword());
+//        this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
+//
+//            @Override
+//            public PreparedStatement makePreparedStatement(Connection conn) throws SQLException {
+//                PreparedStatement ps = conn.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
+//                ps.setString(1, user.getId());
+//                ps.setString(2, user.getName());
+//                ps.setString(3, user.getPassword());
+//                return ps;
+//            }
+//
+//        });
     }
 
     public void deleteAll() throws SQLException {
-        /**
-         * 1. jdbcTemplate을 사용하도록 변경한다.
-         */
         jdbcTemplate.update("delete from users");
     }
 

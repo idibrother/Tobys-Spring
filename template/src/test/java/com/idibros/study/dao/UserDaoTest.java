@@ -6,6 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -57,6 +58,14 @@ public class UserDaoTest {
         assertThat(result.getPassword(), is(user.getPassword()));
     }
 
+    @Test(expected = EmptyResultDataAccessException.class)
+    public void get_id에_해당하는_조회결과가_없을경우() throws SQLException, ClassNotFoundException {
+        /**
+         * 1. 테스트 보완을 위해 id로 조회 결과가 없을 경우를 추가한다.
+         */
+        userDao.get("foo");
+    }
+
     @Test
     public void getCount() throws SQLException, ClassNotFoundException {
         User user = new User();
@@ -80,9 +89,6 @@ public class UserDaoTest {
 
     @Test
     public void getAll() throws SQLException, ClassNotFoundException {
-        /**
-         * 모든 유저 목록을 조회하는 기능을 추가한다.
-         */
         User user1 = new User();
         user1.setId("foo1");
         user1.setName("idibros");
@@ -95,9 +101,6 @@ public class UserDaoTest {
         User resultUser1 = userList.get(0);
         checksumUser(user1, resultUser1);
 
-        /**
-         * 2. 두 번째 유저를 추가하고 검증한다.
-         */
         User user2 = new User();
         user2.setId("foo2");
         user2.setName("idibros2");
@@ -114,9 +117,6 @@ public class UserDaoTest {
         checksumUser(user1, resultUser1);
         checksumUser(user2, resultUser2);
 
-        /**
-         * 3. 한번 더 실행해본다.
-         */
         User user3 = new User();
         user3.setId("foo3");
         user3.setName("idibros3");
@@ -134,6 +134,18 @@ public class UserDaoTest {
         checksumUser(user1, resultUser1);
         checksumUser(user2, resultUser2);
         checksumUser(user3, resultUser3);
+    }
+
+    @Test
+    public void getAll_조회결과가_없는경우() {
+        /**
+         * 2. 유저 목록이 없는 경우도 테스트로 추가한다.
+         */
+        /**
+         * 가능한 예상 결과를 모두 확인해서 내부코드가 변경되어도 잘 동작하는지 검증하는 습관을 가지는 것이 좋다.
+         */
+        List<User> result = userDao.getAll();
+        assertThat(result.size(), is(0));
     }
 
     private void checksumUser(User user1, User resultUser1) {

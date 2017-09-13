@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -53,12 +52,7 @@ public class UserDao {
         /**
          * 1. jdbcTemplate을 사용하도록 변경한다.
          */
-        jdbcTemplate.update(new PreparedStatementCreator() {
-            @Override
-            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-                return con.prepareStatement("delete from users");
-            }
-        });
+        jdbcTemplate.update("delete from users");
     }
 
     public User get(String id) throws ClassNotFoundException, SQLException {

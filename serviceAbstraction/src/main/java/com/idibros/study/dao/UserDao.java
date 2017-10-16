@@ -55,9 +55,6 @@ public class UserDao {
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        /**
-         * 추가한 필드 목록을 고려해서 데이터 추가 로직 수정
-         */
         this.jdbcTemplate.update("insert into users(id, name, password, level, logincount, recommendcount) values(?, ?, ?, ?, ?, ?)",
                 user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLoginCount(), user.getRecommendCount());
     }
@@ -81,6 +78,16 @@ public class UserDao {
     public List<User> getAll() {
         List<User> result = this.jdbcTemplate.query("select * from users order by id", userMapper);
         return result;
+    }
+
+    public void update(User user) {
+        /**
+         * userId에 대하여 수정 기능을 추가하였다.
+         */
+        this.jdbcTemplate.update("update users set name = ?, password = ?, level = ?, logincount = ?, " +
+                "recommendcount = ? " +
+                "where id = ?",
+                user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLoginCount(), user.getRecommendCount(), user.getId());
     }
 }
 

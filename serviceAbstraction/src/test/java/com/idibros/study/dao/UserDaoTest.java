@@ -39,10 +39,6 @@ public class UserDaoTest {
     @Before
     public void setUp() throws ClassNotFoundException, SQLException {
         userDao.deleteAll();
-        /**
-         * BASIC Level의 회원이 50번 이상 로그인 하면 SILVER가 되고,
-         * SILVER Level의 회원이 30번 이상 추천을 받으면 GOLD가 되는 서비스 기능을 추가한다고 가정한다.
-         */
         this.user1 = new User("foo1", "bar1", "pw1", Level.BASIC, 1, 0);
         this.user2 = new User("foo2", "bar2", "pw2", Level.SILVER, 55, 10);
         this.user3 = new User("foo3", "bar3", "pw3", Level.GOLD, 100, 40);
@@ -121,13 +117,35 @@ public class UserDaoTest {
         assertThat(result.size(), is(0));
     }
 
+    @Test
+    public void update() throws SQLException, ClassNotFoundException {
+        /**
+         * 유저의 레벨은 수시로 변경이 가능하기 때문에 id를 제외한 유저 정보의 수정 기능 추가와 관련하여 테스트케이스를 추가한다.
+         */
+        userDao.add(user1);
+        userDao.add(user2);
+
+        user1.setName("foo11");
+        user1.setPassword("pwd11");
+        user1.setLevel(Level.GOLD);
+        user1.setLoginCount(1000);
+        user1.setRecommendCount(999);
+        userDao.update(user1);
+
+        User result = userDao.get(user1.getId());
+        checksumUser(user1, result);
+
+        /**
+         * 수정하지 않은 유저 정보가 그대로 유지되는지 추가로 검증한다.
+         */
+        User result2 = userDao.get(user2.getId());
+        checksumUser(user2, result2);
+    }
+
     private void checksumUser(User user1, User resultUser1) {
         assertThat(user1.getId(), is(resultUser1.getId()));
         assertThat(user1.getName(), is(resultUser1.getName()));
         assertThat(user1.getPassword(), is(resultUser1.getPassword()));
-        /**
-         * 데이터 검증 할 때 추가된 필드에 대한 내용도 포함시킨다.
-         */
         assertThat(user1.getLevel(), is(resultUser1.getLevel()));
         assertThat(user1.getLoginCount(), is(resultUser1.getLoginCount()));
         assertThat(user1.getRecommendCount(), is(resultUser1.getRecommendCount()));

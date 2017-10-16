@@ -1,8 +1,3 @@
-template/.idea/
-template/build/
-template/.gradle/
-template/gradle/wrapper/gradle-wrapper.jar
-template/gradle/wrapper/gradle-wrapper.properties
-template/gradlew
-template/gradlew.bat
-template/settings.gradle
+*.class
+serviceAbstraction/.idea/
+serviceAbstraction/build/tmp/war/MANIFEST.MF

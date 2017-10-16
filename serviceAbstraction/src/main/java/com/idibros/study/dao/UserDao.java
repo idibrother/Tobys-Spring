@@ -1,5 +1,6 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -28,17 +29,37 @@ public class UserDao {
     private RowMapper<User> userMapper = new RowMapper<User>() {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+            /**
+             * 추가한 필드 목록에 대한 맵퍼 수정
+             */
             User user = new User();
             user.setId(rs.getString("id"));
             user.setName(rs.getString("name"));
             user.setPassword(rs.getString("password"));
+            user.setLevel(Level.valueOf(rs.getInt("level")));
+            user.setLoginCount(rs.getInt("logincount"));
+            user.setRecommendCount(rs.getInt("recommendcount"));
             return user;
         }
     };
 
+    public void updateTable() {
+//        this.jdbcTemplate.update("drop table users");
+        this.jdbcTemplate.update("create table users (" +
+                "id varchar(10) primary key, " +
+                "name varchar(20) not null, " +
+                "password varchar(10) not null, " +
+                "level int not null, " +
+                "logincount int not null, " +
+                "recommendcount int not null)");
+    }
+
     public void add(User user) throws ClassNotFoundException, SQLException {
-        this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
-                user.getId(), user.getName(), user.getPassword());
+        /**
+         * 추가한 필드 목록을 고려해서 데이터 추가 로직 수정
+         */
+        this.jdbcTemplate.update("insert into users(id, name, password, level, logincount, recommendcount) values(?, ?, ?, ?, ?, ?)",
+                user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLoginCount(), user.getRecommendCount());
     }
 
     public void deleteAll() throws SQLException {

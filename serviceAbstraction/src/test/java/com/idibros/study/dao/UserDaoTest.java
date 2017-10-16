@@ -1,8 +1,10 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -21,6 +23,12 @@ public class UserDaoTest {
 
     private static UserDao userDao;
 
+    private User user1;
+
+    private User user2;
+
+    private User user3;
+
     @BeforeClass
     public static void init() throws ClassNotFoundException {
         ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
@@ -31,69 +39,50 @@ public class UserDaoTest {
     @Before
     public void setUp() throws ClassNotFoundException, SQLException {
         userDao.deleteAll();
+        /**
+         * BASIC Level의 회원이 50번 이상 로그인 하면 SILVER가 되고,
+         * SILVER Level의 회원이 30번 이상 추천을 받으면 GOLD가 되는 서비스 기능을 추가한다고 가정한다.
+         */
+        this.user1 = new User("foo1", "bar1", "pw1", Level.BASIC, 1, 0);
+        this.user2 = new User("foo2", "bar2", "pw2", Level.SILVER, 55, 10);
+        this.user3 = new User("foo3", "bar3", "pw3", Level.GOLD, 100, 40);
     }
 
     @Test
-    public void add() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
+    @Ignore
+    public void inii() {
+        System.out.println();
+        userDao.updateTable();
     }
 
     @Test
     public void get() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
+        userDao.add(user1);
 
-        userDao.add(user);
+        User result = userDao.get(user1.getId());
 
-        User result = userDao.get(user.getId());
-        assertThat(result.getId(), is(user.getId()));
-        assertThat(result.getName(), is(user.getName()));
-        assertThat(result.getPassword(), is(user.getPassword()));
+        checksumUser(user1, result);
     }
 
     @Test(expected = EmptyResultDataAccessException.class)
     public void get_id에_해당하는_조회결과가_없을경우() throws SQLException, ClassNotFoundException {
-        /**
-         * 1. 테스트 보완을 위해 id로 조회 결과가 없을 경우를 추가한다.
-         */
         userDao.get("foo");
     }
 
     @Test
     public void getCount() throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("foo");
-        user.setName("idibros");
-        user.setPassword("password");
-
-        userDao.add(user);
+        userDao.add(user1);
         int count = userDao.getCount();
         assertThat(count, is(1));
 
-        User user1 = new User();
-        user1.setId("foo1");
-        user1.setName("idibros1");
-        user1.setPassword("password1");
-
-        userDao.add(user1);
+        userDao.add(user2);
         count = userDao.getCount();
         assertThat(count, is(2));
     }
 
     @Test
     public void getAll() throws SQLException, ClassNotFoundException {
-        User user1 = new User();
-        user1.setId("foo1");
-        user1.setName("idibros");
-        user1.setPassword("password");
-        userDao.add(user1);
+        userDao.add(this.user1);
         int count = userDao.getCount();
         assertThat(count, is(1));
 
@@ -101,12 +90,7 @@ public class UserDaoTest {
         User resultUser1 = userList.get(0);
         checksumUser(user1, resultUser1);
 
-        User user2 = new User();
-        user2.setId("foo2");
-        user2.setName("idibros2");
-        user2.setPassword("password2");
-        userDao.add(user2);
-
+        userDao.add(this.user2);
         count = userDao.getCount();
         assertThat(count, is(2));
 
@@ -117,12 +101,7 @@ public class UserDaoTest {
         checksumUser(user1, resultUser1);
         checksumUser(user2, resultUser2);
 
-        User user3 = new User();
-        user3.setId("foo3");
-        user3.setName("idibros3");
-        user3.setPassword("password3");
-        userDao.add(user3);
-
+        userDao.add(this.user3);
         count = userDao.getCount();
         assertThat(count, is(3));
 
@@ -138,12 +117,6 @@ public class UserDaoTest {
 
     @Test
     public void getAll_조회결과가_없는경우() {
-        /**
-         * 2. 유저 목록이 없는 경우도 테스트로 추가한다.
-         */
-        /**
-         * 가능한 예상 결과를 모두 확인해서 내부코드가 변경되어도 잘 동작하는지 검증하는 습관을 가지는 것이 좋다.
-         */
         List<User> result = userDao.getAll();
         assertThat(result.size(), is(0));
     }
@@ -152,6 +125,12 @@ public class UserDaoTest {
         assertThat(user1.getId(), is(resultUser1.getId()));
         assertThat(user1.getName(), is(resultUser1.getName()));
         assertThat(user1.getPassword(), is(resultUser1.getPassword()));
+        /**
+         * 데이터 검증 할 때 추가된 필드에 대한 내용도 포함시킨다.
+         */
+        assertThat(user1.getLevel(), is(resultUser1.getLevel()));
+        assertThat(user1.getLoginCount(), is(resultUser1.getLoginCount()));
+        assertThat(user1.getRecommendCount(), is(resultUser1.getRecommendCount()));
     }
 
 }

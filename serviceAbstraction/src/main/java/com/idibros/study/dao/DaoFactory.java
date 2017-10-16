@@ -1,5 +1,6 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,6 +14,13 @@ import javax.sql.DataSource;
  */
 @Configuration
 public class DaoFactory {
+
+    @Bean
+    public UserService userService() {
+        UserService userService = new UserService();
+        userService.setUserDao(userDao());
+        return userService;
+    }
 
     @Bean
     public UserDao userDao() {

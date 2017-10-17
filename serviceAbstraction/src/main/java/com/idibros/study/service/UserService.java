@@ -4,6 +4,7 @@ import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -38,5 +39,12 @@ public class UserService {
                 userDao.update(user);
             }
         }
+    }
+
+    public void add(User user) throws SQLException, ClassNotFoundException {
+        if (user.getLevel() == null) {
+            user.setLevel(Level.BASIC);
+        }
+        userDao.add(user);
     }
 }

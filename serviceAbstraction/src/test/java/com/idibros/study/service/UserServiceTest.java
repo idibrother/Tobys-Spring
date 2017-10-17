@@ -51,11 +51,6 @@ public class UserServiceTest {
         this.user4 = new User("foo21", "bar22", "pw22", Level.SILVER, 60, 30);
         this.user5 = new User("foo3", "bar3", "pw3", Level.GOLD, 100, 100);
 
-        userDao.add(this.user1);
-        userDao.add(this.user2);
-        userDao.add(this.user3);
-        userDao.add(this.user4);
-        userDao.add(this.user5);
     }
 
     @Test
@@ -65,16 +60,41 @@ public class UserServiceTest {
 
     @Test
     public void upgradeLevels() throws SQLException, ClassNotFoundException {
-        /**
-         * Dao는 순수가게 CRUD 기능만 수행하고,
-         * service layer에서 비즈니스 로직을 담당한다.
-         */
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+        userDao.add(this.user5);
+
         userService.upgradeLevels();
         checkLevel(userDao.get(user1.getId()), Level.BASIC);
         checkLevel(userDao.get(user2.getId()), Level.SILVER);
         checkLevel(userDao.get(user3.getId()), Level.SILVER);
         checkLevel(userDao.get(user4.getId()), Level.GOLD);
         checkLevel(userDao.get(user5.getId()), Level.GOLD);
+    }
+
+    @Test
+    public void add() throws SQLException, ClassNotFoundException {
+        /**
+         * user를 추가 할 때 레벨을 초기화 하는 기능을 추가하려고 한다.
+         * 추가하려고 하는 user의 레벨이 있으면 그대로 사용하고,
+         * 없으면 BASIC 레벨로 초기화하는 기능을 추가한다.
+         * 이런 기능은 비즈니스 로직이므로 서비스레이어에 추가한다.
+         */
+        user1.setLevel(null);
+
+        /**
+         * 유저 레벨 정보가 있는 경우
+         */
+        userService.add(user5);
+        assertThat(userDao.get(user5.getId()).getLevel(), is(Level.GOLD));
+
+        /**
+         * 유저 레벨 정보가 없는 경우
+         */
+        userService.add(user1);
+        assertThat(userDao.get(user1.getId()).getLevel(), is(Level.BASIC));
     }
 
     private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {

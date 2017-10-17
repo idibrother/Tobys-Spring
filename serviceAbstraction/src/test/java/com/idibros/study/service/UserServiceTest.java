@@ -8,12 +8,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.sql.SQLException;
 
+import static com.idibros.study.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
+import static com.idibros.study.service.UserService.MIN_RECOMMEND_FOR_GOLD;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -45,10 +46,13 @@ public class UserServiceTest {
     public void init() throws SQLException, ClassNotFoundException {
         userDao.deleteAll();
 
+        /**
+         * upgrade 조건에 대한 값을 상수로 설정한다.
+         */
         this.user1 = new User("foo1", "bar1", "pw1", Level.BASIC, 49, 0);
-        this.user2 = new User("foo11", "bar12", "pw12", Level.BASIC, 50, 0);
+        this.user2 = new User("foo11", "bar12", "pw12", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER, 0);
         this.user3 = new User("foo2", "bar2", "pw2", Level.SILVER, 60, 29);
-        this.user4 = new User("foo21", "bar22", "pw22", Level.SILVER, 60, 30);
+        this.user4 = new User("foo21", "bar22", "pw22", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD);
         this.user5 = new User("foo3", "bar3", "pw3", Level.GOLD, 100, 100);
 
     }
@@ -64,14 +68,13 @@ public class UserServiceTest {
         userDao.add(this.user2);
         userDao.add(this.user3);
         userDao.add(this.user4);
-        userDao.add(this.user5);
 
         userService.upgradeLevels();
-        checkLevel(userDao.get(user1.getId()), Level.BASIC);
-        checkLevel(userDao.get(user2.getId()), Level.SILVER);
-        checkLevel(userDao.get(user3.getId()), Level.SILVER);
-        checkLevel(userDao.get(user4.getId()), Level.GOLD);
-        checkLevel(userDao.get(user5.getId()), Level.GOLD);
+
+        checkLevelUpgraded(user1, false);
+        checkLevelUpgraded(user2, true);
+        checkLevelUpgraded(user3, false);
+        checkLevelUpgraded(user4, true);
     }
 
     @Test
@@ -97,9 +100,22 @@ public class UserServiceTest {
         assertThat(userDao.get(user1.getId()).getLevel(), is(Level.BASIC));
     }
 
-    private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {
-        User result = userDao.get(user.getId());
-        assertThat(user.getLevel(), is(result.getLevel()));
+    /**
+     * 무엇에 대한 체크인지 파악이 어렵기 때문에 리팩토링한다.
+     */
+//    private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {
+//        User result = userDao.get(user.getId());
+//        assertThat(expectedLevel, is(result.getLevel()));
+//    }
+    private void checkLevelUpgraded(User user, boolean upgraded) throws SQLException, ClassNotFoundException {
+        User userUpdate = userDao.get(user.getId());
+        Level userUpdateLevel = userUpdate.getLevel();
+        Level userLevel = user.getLevel();
+        if (upgraded) {
+            assertThat(userUpdateLevel, is(userLevel.nextLevel()));
+        } else {
+            assertThat(userUpdateLevel, is(userLevel));
+        }
     }
 
 }

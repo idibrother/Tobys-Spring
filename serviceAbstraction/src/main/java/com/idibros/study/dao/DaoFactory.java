@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 /**
  * Created by dongba on 2017-08-22.
@@ -16,7 +17,7 @@ import javax.sql.DataSource;
 public class DaoFactory {
 
     @Bean
-    public UserService userService() {
+    public UserService userService() throws SQLException {
         UserService userService = new UserService();
         userService.setUserDao(userDao());
         return userService;

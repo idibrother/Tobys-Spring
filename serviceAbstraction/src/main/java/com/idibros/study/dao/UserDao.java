@@ -2,6 +2,8 @@ package com.idibros.study.dao;
 
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
+import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ public class UserDao {
     private Logger logger = LoggerFactory.getLogger(UserDao.class);
 
     @Setter
+    @Getter
     private JdbcTemplate jdbcTemplate;
 
     private RowMapper<User> userMapper = new RowMapper<User>() {

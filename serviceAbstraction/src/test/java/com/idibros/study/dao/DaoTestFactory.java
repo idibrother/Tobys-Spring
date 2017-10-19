@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
  * Created by dongba on 2017-10-18.
  */
@@ -15,9 +18,10 @@ public class DaoTestFactory extends DaoFactory {
 
     @Primary
     @Bean
-    public UserService userService() {
+    public UserService userService() throws SQLException {
         TestUserService userService = new TestUserService("foo21");
-        userService.setUserDao(userDao());
+        UserDao userDao = userDao();
+        userService.setUserDao(userDao);
         return userService;
     }
 

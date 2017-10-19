@@ -86,15 +86,13 @@ public class UserServiceTest {
          * 하나의 트랜젝션은 모두 정상 완료 하거나 그렇지 않거나여야 한다.
          * 하지만 user4에서 예외가 발생해도 user2는 업그레이드가 되어 있다.
          * 트랜젝션이 깨진 것이다.
+         * 원하는 결과는 트랜젝션 중간에 실패가 있을 경우 모든 유저의 업그레이드 작업을 원상복귀하는 것이다.
          */
         checkLevelUpgraded(user2, false);
     }
 
     @Test
     public void upgradeLevels() throws SQLException, ClassNotFoundException {
-        /**
-         * 원하는 결과는 트랜젝션 중간에 실패가 있을 경우 모든 유저의 업그레이드 작업을 원상복귀하는 것이다.
-         */
         userDao.add(this.user1);
         userDao.add(this.user2);
         userDao.add(this.user3);

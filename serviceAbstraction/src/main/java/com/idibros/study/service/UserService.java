@@ -3,6 +3,7 @@ package com.idibros.study.service;
 import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
+import lombok.Setter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -19,6 +20,9 @@ public class UserService {
     public static final int MIN_RECOMMEND_FOR_GOLD = 30;
     private UserDao userDao;
 
+    @Setter
+    private DataSource dataSource;
+
     public void setUserDao (UserDao userDao) {
         this.userDao = userDao;
     }
@@ -33,11 +37,10 @@ public class UserService {
          * 하지만 아래와 같은 코드는 비즈니스 로직과 DAO 로직이 혼합되어 나오므로 분리했던 노력들이 의미가 없어진다.
          * 모든 유저의 레벨을 업그레이드 하는 트랜젝션 생성을 위한 구조로 변경을 검토해본다.
          */
-        JdbcTemplate jdbcTemplate = userDao.getJdbcTemplate();
-        DataSource dataSource = jdbcTemplate.getDataSource();
-        Connection c = dataSource.getConnection();
+        Connection c = this.dataSource.getConnection();
         /**
-         * 원인은 모르겠지만 오토커밋 off가 안되거나 롤백이 제대로 안되는 것 같다.
+         * 주입했던 datasource를 다시 서비스 인스턴스에 할당해서 사용 할 수 있도록 변경해봤지만
+         * 역시 autocommit을 false로 한 설정과 롤백이 제대로 동작하지 않았다.
          */
         c.setAutoCommit(false);
         try {

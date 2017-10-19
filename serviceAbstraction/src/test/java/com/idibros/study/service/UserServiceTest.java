@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 import static com.idibros.study.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
@@ -24,7 +25,7 @@ import static org.hamcrest.core.Is.is;
  * Created by dongba on 2017-10-16.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {DaoTestFactory.class})
+@ContextConfiguration(classes = {DaoFactory.class})
 public class UserServiceTest {
 
     @Autowired
@@ -32,6 +33,9 @@ public class UserServiceTest {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private DataSource dataSource;
 
     private User user1;
 
@@ -64,16 +68,17 @@ public class UserServiceTest {
     }
 
     @Test
-    public void upgradeLevels() throws SQLException, ClassNotFoundException {
-        /**
-         * 원하는 결과는 트랜젝션 중간에 실패가 있을 경우 모든 유저의 업그레이드 작업을 원상복귀하는 것이다.
-         */
+    public void testAllOrNothing() throws SQLException, ClassNotFoundException {
         userDao.add(this.user1);
         userDao.add(this.user2);
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        userService.upgradeLevels();
+        TestUserService testUserService = new TestUserService("foo21");
+        testUserService.setUserDao(this.userDao);
+        testUserService.setDataSource(this.dataSource);
+
+        testUserService.upgradeLevels();
 
         /**
          * user4에 대해서 예외를 고의를 발생시켰으므로 user2번이 원복되는 것을 원한다.
@@ -83,6 +88,24 @@ public class UserServiceTest {
          * 트랜젝션이 깨진 것이다.
          */
         checkLevelUpgraded(user2, false);
+    }
+
+    @Test
+    public void upgradeLevels() throws SQLException, ClassNotFoundException {
+        /**
+         * 원하는 결과는 트랜젝션 중간에 실패가 있을 경우 모든 유저의 업그레이드 작업을 원상복귀하는 것이다.
+         */
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+
+        userService.setDataSource(this.dataSource);
+
+        userService.upgradeLevels();
+
+
+        checkLevelUpgraded(user2, true);
     }
 
     @Test

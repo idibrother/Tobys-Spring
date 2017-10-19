@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -35,7 +36,7 @@ public class UserServiceTest {
     private UserDao userDao;
 
     @Autowired
-    private DataSource dataSource;
+    private DataSourceTransactionManager transactionManager;
 
     private User user1;
 
@@ -76,7 +77,7 @@ public class UserServiceTest {
 
         TestUserService testUserService = new TestUserService("foo21");
         testUserService.setUserDao(this.userDao);
-        testUserService.setDataSource(this.dataSource);
+        testUserService.setTransactionManager(transactionManager);
 
         testUserService.upgradeLevels();
 

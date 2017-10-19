@@ -4,6 +4,7 @@ import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -25,8 +26,9 @@ public class UserService {
     public static final int MIN_RECOMMEND_FOR_GOLD = 30;
     private UserDao userDao;
 
+    @Autowired
     @Setter
-    private DataSource dataSource;
+    private DataSourceTransactionManager transactionManager;
 
     public void setUserDao (UserDao userDao) {
         this.userDao = userDao;
@@ -34,16 +36,7 @@ public class UserService {
 
     public void upgradeLevels() throws SQLException {
         /**
-         * 트랙젝션 추상화 기술을 사용해서 좀 더 범용적인 트랜젝션 관리가 가능하다고 한다.
-         */
-
-        /**
-         * 우선 트랜젝션 추상화 클래스에 datasource를 할당한다.
-         */
-        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
-
-        /**
-         * 트랜젝션 상태를 가져오고,
+         * 데이터 접근 기술과 비즈니스 로직을 분리하기 위해서 transactionManager를 DI받는 구조로 변경한다.
          */
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 

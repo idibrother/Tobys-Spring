@@ -100,10 +100,7 @@ public class UserServiceTest {
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        userService.setDataSource(this.dataSource);
-
         userService.upgradeLevels();
-
 
         checkLevelUpgraded(user2, true);
     }

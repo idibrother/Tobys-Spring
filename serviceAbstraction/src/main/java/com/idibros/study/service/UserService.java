@@ -5,6 +5,8 @@ import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import lombok.Setter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -28,7 +30,14 @@ public class UserService {
     }
 
     public void upgradeLevels() throws SQLException {
-        List<User> allUsers = userDao.getAll();
+        /**
+         * 트랜젝션 동기화를 사용해서 롤백이 성공하였다.
+         * JdbcTemplate은 동기화 저장소에 등록된 DB커넥션이나 트랜젝션이 없으면 직접 생성해서 사용한다고 한다.
+         * 반면 아래와 같이 동기화 저장소 설정을 하면 저장소에 있는 커넥션을 가져와서 사용한다고 한다.
+         */
+        TransactionSynchronizationManager.initSynchronization();
+        Connection c = DataSourceUtils.getConnection(dataSource);
+        c.setAutoCommit(false);
 
         /**
          * 트랜젝션 관리를 위해 아래와 같이 connection에 대해서 autoCommit을 false로 세팅한다.
@@ -37,30 +46,25 @@ public class UserService {
          * 하지만 아래와 같은 코드는 비즈니스 로직과 DAO 로직이 혼합되어 나오므로 분리했던 노력들이 의미가 없어진다.
          * 모든 유저의 레벨을 업그레이드 하는 트랜젝션 생성을 위한 구조로 변경을 검토해본다.
          */
-        Connection c = this.dataSource.getConnection();
-        /**
-         * 주입했던 datasource를 다시 서비스 인스턴스에 할당해서 사용 할 수 있도록 변경해봤지만
-         * 역시 autocommit을 false로 한 설정과 롤백이 제대로 동작하지 않았다.
-         */
-        c.setAutoCommit(false);
         try {
+            List<User> allUsers = userDao.getAll();
             for(User user : allUsers) {
                 if (canUpgradeLevel(user)) {
                     upgradeLevel(user);
                 }
             }
+            c.commit();
         } catch (Exception e) {
             c.rollback();
-            try {
-                User foo11 = userDao.get("foo11");
-                System.out.println();
-            } catch (ClassNotFoundException e1) {
-                e1.printStackTrace();
-            }
-            System.out.println();
         } finally {
-            c.commit();
-            c.close();
+            /**
+             * 트랜젝션이 종료되면 스프링 데이터소스 유틸을 사용해서 안전하게 닫아줘야 되나보다.
+             * JdbcTemplate이 이런 동작을 자동으로 해 주지만 해당 케이스는 동기화 저장소에 있는 커넥션을 사용했기 때문에
+             * 그런것 같다.
+             */
+            DataSourceUtils.releaseConnection(c, dataSource);
+            TransactionSynchronizationManager.unbindResource(this.dataSource);
+            TransactionSynchronizationManager.clearSynchronization();
         }
     }
 

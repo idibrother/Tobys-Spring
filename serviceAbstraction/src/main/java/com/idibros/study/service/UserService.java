@@ -35,27 +35,22 @@ public class UserService {
     }
 
     public void upgradeLevels() throws SQLException {
-        /**
-         * 데이터 접근 기술과 비즈니스 로직을 분리하기 위해서 transactionManager를 DI받는 구조로 변경한다.
-         */
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         try {
-            List<User> allUsers = userDao.getAll();
-            for(User user : allUsers) {
-                if (canUpgradeLevel(user)) {
-                    upgradeLevel(user);
-                }
-            }
-            /**
-             * 트랜젝션 관리 모듈에 전달해서 트랜젝션 상태변경을 하는 것 같다.
-             */
+            upgradeLevelsInternal();
             transactionManager.commit(status);
         } catch (Exception e) {
-            /**
-             * 트랜젝션 실행 중 예외가 발생하면 롤백처리한다.
-             */
             transactionManager.rollback(status);
+        }
+    }
+
+    private void upgradeLevelsInternal() {
+        List<User> allUsers = userDao.getAll();
+        for(User user : allUsers) {
+            if (canUpgradeLevel(user)) {
+                upgradeLevel(user);
+            }
         }
     }
 

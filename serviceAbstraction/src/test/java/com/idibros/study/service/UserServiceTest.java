@@ -1,10 +1,11 @@
 package com.idibros.study.service;
 
 import com.idibros.study.dao.DaoFactory;
-import com.idibros.study.dao.DaoTestFactory;
 import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
+import com.idibros.study.service.impl.UserServiceImpl;
+import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,11 +14,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 
-import static com.idibros.study.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
-import static com.idibros.study.service.UserService.MIN_RECOMMEND_FOR_GOLD;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -56,9 +54,9 @@ public class UserServiceTest {
          * upgrade 조건에 대한 값을 상수로 설정한다.
          */
         this.user1 = new User("foo1", "bar1", "pw1", Level.BASIC, 49, 0);
-        this.user2 = new User("foo11", "bar12", "pw12", Level.BASIC, MIN_LOGCOUNT_FOR_SILVER, 0);
+        this.user2 = new User("foo11", "bar12", "pw12", Level.BASIC, UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER, 0);
         this.user3 = new User("foo2", "bar2", "pw2", Level.SILVER, 60, 29);
-        this.user4 = new User("foo21", "bar22", "pw22", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD);
+        this.user4 = new User("foo21", "bar22", "pw22", Level.SILVER, 60, UserServiceImpl.MIN_RECOMMEND_FOR_GOLD);
         this.user5 = new User("foo3", "bar3", "pw3", Level.GOLD, 100, 100);
 
     }
@@ -76,10 +74,19 @@ public class UserServiceTest {
         userDao.add(this.user4);
 
         TestUserService testUserService = new TestUserService("foo21");
-        testUserService.setUserDao(this.userDao);
-        testUserService.setTransactionManager(transactionManager);
+        testUserService.setUserDao(userDao);
 
-        testUserService.upgradeLevels();
+        /**
+         * 트랜젝션 기능이 없는 UserService 구현체에게 트랜젝션 이외의 작업을 위임하고
+         * 트랜젝션 관리 기능만 담당한다.
+         * 이번 테스트에서는 일부 유저일 경우 일부러 예외를 발생시켜서 롤백처리를 하기 때문에
+         * 이를 구현한 테스트용 UserService 구현체를 사용한다.
+         */
+        UserServiceTx userServiceTx = new UserServiceTx();
+        userServiceTx.setUserService(testUserService);
+        userServiceTx.setTransactionManager(transactionManager);
+
+        userServiceTx.upgradeLevels();
 
         /**
          * user4에 대해서 예외를 고의를 발생시켰으므로 user2번이 원복되는 것을 원한다.

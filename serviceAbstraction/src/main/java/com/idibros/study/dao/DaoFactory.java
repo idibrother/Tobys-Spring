@@ -1,6 +1,7 @@
 package com.idibros.study.dao;
 
 import com.idibros.study.service.UserService;
+import com.idibros.study.service.impl.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,7 +20,7 @@ public class DaoFactory {
 
     @Bean
     public UserService userService() throws SQLException {
-        UserService userService = new UserService();
+        UserServiceImpl userService = new UserServiceImpl();
         userService.setUserDao(userDao());
         return userService;
     }

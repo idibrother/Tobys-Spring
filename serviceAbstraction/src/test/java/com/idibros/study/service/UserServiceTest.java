@@ -9,16 +9,20 @@ import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.util.MatcherAssertionErrors.assertThat;
 
 /**
  * Created by dongba on 2017-10-16.
@@ -109,16 +113,11 @@ public class UserServiceTest {
         userService.upgradeLevels();
 
         checkLevelUpgraded(user2, true);
+        checkLevelUpgraded(user4, true);
     }
 
     @Test
     public void add() throws SQLException, ClassNotFoundException {
-        /**
-         * user를 추가 할 때 레벨을 초기화 하는 기능을 추가하려고 한다.
-         * 추가하려고 하는 user의 레벨이 있으면 그대로 사용하고,
-         * 없으면 BASIC 레벨로 초기화하는 기능을 추가한다.
-         * 이런 기능은 비즈니스 로직이므로 서비스레이어에 추가한다.
-         */
         user1.setLevel(null);
 
         /**
@@ -132,6 +131,60 @@ public class UserServiceTest {
          */
         userService.add(user1);
         assertThat(userDao.get(user1.getId()).getLevel(), is(Level.BASIC));
+    }
+
+    @Test
+    public void upgradeLevels_목_객체_활용() throws SQLException, ClassNotFoundException {
+        /**
+         * userDao 목 객체를 만들어서 userService에 설정
+         */
+        UserDao userDaoMock = mock(UserDao.class);
+        ((UserServiceImpl)userService).setUserDao(userDaoMock);
+
+        ArrayList<User> users = new ArrayList<>();
+        users.add(user1);
+        users.add(user2);
+        users.add(user3);
+        users.add(user4);
+
+        /**
+         * 모든 유저를 조회 했을 때 디비와 연동하지 않아도 유저 목록을 가져오도록 아래와 같이 설정
+         */
+        when(userDaoMock.getAll()).thenReturn(users);
+
+        /**
+         * upgradeLevels를 호출 하면 내부적으로 userDaoMock으로부터 설정한 유저 목록을 조회함(DB와 독립적으로 동작)
+         * userDaoMock의 update를 호출하면 아무 동작도 하지 않도록 설정
+         */
+        doNothing().when(userDaoMock).update(Matchers.any(User.class));
+        userService.upgradeLevels();
+
+        /**
+         * 결과 확인을 위해 userDaoMock으로부터 모든 유저를 가져와서 검증
+         */
+        List<User> resultUsers = userDaoMock.getAll();
+        /**
+         * checkLevelUpgraded는 실제 DB와 연동하는 것을 기준으로 작성했기 때문에 해당 케이스에서는 활용 할 수 없다.
+         */
+//        checkLevelUpgraded(resultUsers.get(0), false);
+//        checkLevelUpgraded(resultUsers.get(1), true);
+//        checkLevelUpgraded(resultUsers.get(2), false);
+//        checkLevelUpgraded(resultUsers.get(3), true);
+        assertThat(resultUsers.get(0).getLevel(), is(Level.BASIC));
+        assertThat(resultUsers.get(1).getLevel(), is(Level.SILVER));
+        assertThat(resultUsers.get(2).getLevel(), is(Level.SILVER));
+        assertThat(resultUsers.get(3).getLevel(), is(Level.GOLD));
+
+        /**
+         * 선택이긴 하지만 테스트용 컨텍스트를 구성해서 임베디드 디비를 활용하여 실제 디비가 아니어도 테스트가 가능하다.
+         * 성능차이는 있을 수도 있지만 임베디드 디비이기 때문에 크게 차이가 날것같진 않다.
+         * 확인해봤는데 임베디드 디비를 사용한 테스트가 더 빨랐다.
+         */
+
+        /**
+         * 다른 유닛테스트에 영향을 주지 않기 위해 userDao를 원복시켜야 한다.
+         */
+        ((UserServiceImpl) userService).setUserDao(userDao);
     }
 
     /**

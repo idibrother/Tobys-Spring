@@ -4,6 +4,7 @@ import com.idibros.study.dao.DaoFactory;
 import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
+import com.idibros.study.reflection.proxy.TransactionHendler;
 import com.idibros.study.service.impl.UserServiceImpl;
 import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -185,6 +187,43 @@ public class UserServiceTest {
          * 다른 유닛테스트에 영향을 주지 않기 위해 userDao를 원복시켜야 한다.
          */
         ((UserServiceImpl) userService).setUserDao(userDao);
+    }
+
+    @Test
+    public void transactionTestWithDynamicProxy () throws SQLException, ClassNotFoundException {
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+
+        /**
+         * 앞에서의 예제와 동일하게 특정 유저에 대한 upgradeLevel 실행 할 때 예외를 발생시키는 테스트용 UserService를 사용한다.
+         */
+        TestUserService testUserService = new TestUserService("foo21");
+        testUserService.setUserDao(userDao);
+
+        TransactionHendler transactionHendler = new TransactionHendler();
+        transactionHendler.setTarget(testUserService);
+        transactionHendler.setPattern("upgrade");
+        transactionHendler.setTransactionManager(transactionManager);
+
+        UserService userService = (UserService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] {UserService.class}, transactionHendler);
+
+        try {
+            userService.upgradeLevels();
+        } catch (Exception e) {
+        }
+
+        /**
+         * user4에 대해서 예외를 고의를 발생시켰으므로 user2번이 원복되는 것을 원한다.
+         * 하지만...
+         * 하나의 트랜젝션은 모두 정상 완료 하거나 그렇지 않거나여야 한다.
+         * 하지만 user4에서 예외가 발생해도 user2는 업그레이드가 되어 있다.
+         * 트랜젝션이 깨진 것이다.
+         * 원하는 결과는 트랜젝션 중간에 실패가 있을 경우 모든 유저의 업그레이드 작업을 원상복귀하는 것이다.
+         */
+        checkLevelUpgraded(user2, false);
+
     }
 
     /**

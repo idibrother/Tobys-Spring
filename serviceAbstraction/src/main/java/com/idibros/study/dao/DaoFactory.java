@@ -1,5 +1,6 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.factory.TxProxyFactoryBean;
 import com.idibros.study.service.UserService;
 import com.idibros.study.service.impl.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,17 @@ import java.sql.SQLException;
 public class DaoFactory {
 
     @Bean
-    public UserService userService() throws SQLException {
+    public TxProxyFactoryBean userService() throws SQLException {
+        TxProxyFactoryBean txProxyFactoryBean = new TxProxyFactoryBean();
+        txProxyFactoryBean.setTarget(userServiceImpl());
+        txProxyFactoryBean.setTransactionManager(dataSourceTransactionManager());
+        txProxyFactoryBean.setPattern("upgradeLevels");
+        txProxyFactoryBean.setServiceInterface(UserService.class);
+        return txProxyFactoryBean;
+    }
+
+    @Bean
+    public UserService userServiceImpl() throws SQLException {
         UserServiceImpl userService = new UserServiceImpl();
         userService.setUserDao(userDao());
         return userService;

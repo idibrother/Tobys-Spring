@@ -4,7 +4,8 @@ import com.idibros.study.dao.DaoFactory;
 import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
-import com.idibros.study.reflection.proxy.TransactionHendler;
+import com.idibros.study.factory.TxProxyFactoryBean;
+import com.idibros.study.reflection.proxy.TransactionHandler;
 import com.idibros.study.service.impl.UserServiceImpl;
 import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,10 +36,13 @@ import static org.springframework.test.util.MatcherAssertionErrors.assertThat;
 public class UserServiceTest {
 
     @Autowired
-    private UserService userService;
+    private UserService userServiceImpl;
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Autowired
     private DataSourceTransactionManager transactionManager;
@@ -69,7 +74,7 @@ public class UserServiceTest {
 
     @Test
     public void bean() {
-        assertThat(this.userService, is(notNullValue()));
+        assertThat(this.userServiceImpl, is(notNullValue()));
     }
 
     @Test
@@ -112,7 +117,7 @@ public class UserServiceTest {
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        userService.upgradeLevels();
+        userServiceImpl.upgradeLevels();
 
         checkLevelUpgraded(user2, true);
         checkLevelUpgraded(user4, true);
@@ -125,13 +130,13 @@ public class UserServiceTest {
         /**
          * 유저 레벨 정보가 있는 경우
          */
-        userService.add(user5);
+        userServiceImpl.add(user5);
         assertThat(userDao.get(user5.getId()).getLevel(), is(Level.GOLD));
 
         /**
          * 유저 레벨 정보가 없는 경우
          */
-        userService.add(user1);
+        userServiceImpl.add(user1);
         assertThat(userDao.get(user1.getId()).getLevel(), is(Level.BASIC));
     }
 
@@ -141,7 +146,7 @@ public class UserServiceTest {
          * userDao 목 객체를 만들어서 userService에 설정
          */
         UserDao userDaoMock = mock(UserDao.class);
-        ((UserServiceImpl)userService).setUserDao(userDaoMock);
+        ((UserServiceImpl)userServiceImpl).setUserDao(userDaoMock);
 
         ArrayList<User> users = new ArrayList<>();
         users.add(user1);
@@ -159,7 +164,7 @@ public class UserServiceTest {
          * userDaoMock의 update를 호출하면 아무 동작도 하지 않도록 설정
          */
         doNothing().when(userDaoMock).update(Matchers.any(User.class));
-        userService.upgradeLevels();
+        userServiceImpl.upgradeLevels();
 
         /**
          * 결과 확인을 위해 userDaoMock으로부터 모든 유저를 가져와서 검증
@@ -186,7 +191,7 @@ public class UserServiceTest {
         /**
          * 다른 유닛테스트에 영향을 주지 않기 위해 userDao를 원복시켜야 한다.
          */
-        ((UserServiceImpl) userService).setUserDao(userDao);
+        ((UserServiceImpl) userServiceImpl).setUserDao(userDao);
     }
 
     @Test
@@ -202,7 +207,7 @@ public class UserServiceTest {
         TestUserService testUserService = new TestUserService("foo21");
         testUserService.setUserDao(userDao);
 
-        TransactionHendler transactionHendler = new TransactionHendler();
+        TransactionHandler transactionHendler = new TransactionHandler();
         transactionHendler.setTarget(testUserService);
         transactionHendler.setPattern("upgrade");
         transactionHendler.setTransactionManager(transactionManager);
@@ -224,6 +229,33 @@ public class UserServiceTest {
          */
         checkLevelUpgraded(user2, false);
 
+    }
+
+    @Test
+    public void upgradeAllOrNothing () throws Exception {
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+
+        TestUserService testUserService = new TestUserService("foo21");
+        testUserService.setUserDao(userDao);
+
+        TxProxyFactoryBean txProxyFactoryBean = (TxProxyFactoryBean) applicationContext.getBean("&userService");
+        /**
+         * 팩토리 빈을 활용해서 매번 트랜젝션 기능을 필요로 하는 클래스를 추가할 필요가 없어졌다?
+         * txProxyFactoryBean도 Bean이기 때문에 target을 하나만 지정할 수 있는데...
+         */
+        txProxyFactoryBean.setTarget(testUserService);
+        UserService txUserService = (UserService) txProxyFactoryBean.getObject();
+
+        try {
+            txUserService.upgradeLevels();
+        } catch (TestUserService.TestUserServiceException e) {
+
+        }
+
+        checkLevelUpgraded(user2, false);
     }
 
     /**

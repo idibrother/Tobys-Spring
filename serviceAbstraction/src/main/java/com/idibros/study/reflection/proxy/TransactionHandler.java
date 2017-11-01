@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 /**
  * Created by dongba on 2017-10-26.
  */
-public class TransactionHendler implements InvocationHandler {
+public class TransactionHandler implements InvocationHandler {
 
     @Setter
     private Object target;

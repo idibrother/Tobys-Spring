@@ -5,13 +5,21 @@ import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import com.idibros.study.factory.TxProxyFactoryBean;
+import com.idibros.study.factory.UpperCaseAdvice;
+import com.idibros.study.reflection.Hello;
+import com.idibros.study.reflection.impl.HelloTarget;
 import com.idibros.study.reflection.proxy.TransactionHandler;
+import com.idibros.study.reflection.proxy.UppercaseHandler;
 import com.idibros.study.service.impl.UserServiceImpl;
 import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -258,10 +266,92 @@ public class UserServiceTest {
         checkLevelUpgraded(user2, false);
     }
 
-    /**
-     * 무엇에 대한 체크인지 파악이 어렵기 때문에 리팩토링한다.
-     */
-//    private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {
+    @Test
+    public void simpleProxy () {
+        /**
+         * JDK의 다이내믹 프록시를 사용해서 프록시를 생성
+         * 이전 예제에서는 다이내믹 프록시를 빈으로 등록 후 타겟을 지정해서 재사용했고,
+         * 지금은 스프링의 ProxyFactoryBean 기능을 확인하기 위해 기본적인 형태의 다이내믹 프록시를 사용하고 대조하는 것 같다.
+         */
+        UppercaseHandler uppercaseHandler = new UppercaseHandler();
+        HelloTarget target = new HelloTarget();
+        String name = "foo";
+        String result1 = target.sayHello(name);
+        assertThat(result1, is("Hello foo"));
+
+        uppercaseHandler.setTarget(target);
+        Hello proxy = (Hello) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class[]{Hello.class},
+                uppercaseHandler);
+        String result2 = proxy.sayHello(name);
+        assertThat(result2, is("HELLO FOO"));
+    }
+
+    @Test
+    public void proxyFactoryBean () {
+        /**
+         * ProxyFactoryBean은 타깃을 지정하고, 부가기능을 별도로 추가 할 수 있다.
+         */
+        ProxyFactoryBean pfBean = new ProxyFactoryBean();
+        String name = "foo";
+        HelloTarget target = new HelloTarget();
+        String result1 = target.sayHello(name);
+        assertThat(result1, is("Hello foo"));
+
+        pfBean.setTarget(target);
+        /**
+         * 여기서 처음으로 어드바이스라는 용어가 나왔다.
+         * 어드바이스는 타깃이 필요 없는 순수 부가기능이라고 한다.
+         */
+        pfBean.addAdvice(new UpperCaseAdvice());
+
+        Hello proxiedHello = (Hello) pfBean.getObject();
+        String result2 = proxiedHello.sayHello(name);
+        assertThat(result2, is("HELLO FOO"));
+
+        /**
+         * 여러개도 가능하다고 한다.
+         */
+    }
+
+    @Test
+    public void pointcutAdvisor () {
+        /**
+         * 대상 메소드를 설정하는 것을 pointcut에 위임하는 구조를 활용한다.
+         * 여기서 pointcut이라는 것의 정의는 어드바이스를 적용할 대상 메소드를 설정하는 것이라고 한다.
+         */
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        HelloTarget target = new HelloTarget();
+        proxyFactoryBean.setTarget(target);
+
+        NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
+        pointcut.setMappedName("sayH*");
+
+        UpperCaseAdvice advice = new UpperCaseAdvice();
+        /**
+         * Advisor는 포인트컷과 어드바이스를 조합해주는 것 같다.
+         */
+        proxyFactoryBean.addAdvisor(new DefaultPointcutAdvisor(pointcut, advice));
+
+        Hello proxiedHello = (Hello) proxyFactoryBean.getObject();
+
+        String name = "foo";
+        String result1 = "Thank you foo";
+        /**
+         * 포인트컷에 메소드 이름을 sayH*로 설정했기 때문에 Thank you는 적용 제외 대상이다.
+         */
+        assertThat(proxiedHello.sayThankYou(name), is(result1));
+
+        /**
+         * 나머지 sayHello와 sayHi는 포인트컷에 포함되므로 어드바이스가 적용된 결과를 리턴할 것이다.
+         */
+        String result2 = "HELLO FOO";
+        assertThat(proxiedHello.sayHello(name), is(result2));
+        String result3 = "HI FOO";
+        assertThat(proxiedHello.sayHi(name), is(result3));
+    }
+
+    //    private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {
 //        User result = userDao.get(user.getId());
 //        assertThat(expectedLevel, is(result.getLevel()));
 //    }

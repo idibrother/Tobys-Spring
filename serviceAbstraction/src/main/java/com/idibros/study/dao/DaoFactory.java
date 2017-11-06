@@ -1,8 +1,12 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.factory.TransactionAdvice;
 import com.idibros.study.factory.TxProxyFactoryBean;
 import com.idibros.study.service.UserService;
 import com.idibros.study.service.impl.UserServiceImpl;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,6 +22,33 @@ import java.sql.SQLException;
  */
 @Configuration
 public class DaoFactory {
+
+    @Bean
+    public ProxyFactoryBean proxyFactoryBean() throws SQLException {
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        proxyFactoryBean.addAdvisor(defaultPointcutAdvisor());
+        return proxyFactoryBean;
+    }
+
+    @Bean
+    public DefaultPointcutAdvisor defaultPointcutAdvisor () {
+        DefaultPointcutAdvisor pointcutAdvisor = new DefaultPointcutAdvisor(nameMatchMethodPointcut(), transactionAdvice());
+        return pointcutAdvisor;
+    }
+
+    @Bean
+    public TransactionAdvice transactionAdvice() {
+        TransactionAdvice transactionAdvice = new TransactionAdvice();
+        transactionAdvice.setTransactionManager(dataSourceTransactionManager());
+        return transactionAdvice;
+    }
+
+    @Bean
+    public NameMatchMethodPointcut nameMatchMethodPointcut () {
+        NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
+        pointcut.setMappedName("upgrade*");
+        return pointcut;
+    }
 
     @Bean
     public TxProxyFactoryBean userService() throws SQLException {

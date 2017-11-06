@@ -16,13 +16,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -54,6 +54,9 @@ public class UserServiceTest {
 
     @Autowired
     private DataSourceTransactionManager transactionManager;
+
+    @Autowired
+    private ProxyFactoryBean proxyFactoryBean;
 
     private User user1;
 
@@ -349,6 +352,31 @@ public class UserServiceTest {
         assertThat(proxiedHello.sayHello(name), is(result2));
         String result3 = "HI FOO";
         assertThat(proxiedHello.sayHi(name), is(result3));
+    }
+
+    @Test
+    @DirtiesContext
+    public void applyProxyFactoryBeanToUserService () throws SQLException, ClassNotFoundException {
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+
+        TestUserService testUserService = new TestUserService("foo21");
+        testUserService.setUserDao(userDao);
+        /**
+         * proxyFactoryBean을 사용하면 target이 구현한 모든 인터페이스를 대상으로 부가기능 적용 설정이 가능하다.
+         */
+        proxyFactoryBean.setTarget(testUserService);
+
+        UserService proxiedUserService = (UserService) proxyFactoryBean.getObject();
+        try {
+            proxiedUserService.upgradeLevels();
+        } catch (TestUserService.TestUserServiceException e) {
+
+        }
+
+        checkLevelUpgraded(user2, false);
     }
 
     //    private void checkLevel(User user, Level expectedLevel) throws SQLException, ClassNotFoundException {

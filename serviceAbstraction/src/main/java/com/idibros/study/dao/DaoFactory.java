@@ -1,10 +1,13 @@
 package com.idibros.study.dao;
 
+import com.idibros.study.aop.NameMatchClassMethodPointcut;
 import com.idibros.study.factory.TransactionAdvice;
 import com.idibros.study.factory.TxProxyFactoryBean;
 import com.idibros.study.service.UserService;
+import com.idibros.study.service.impl.TestUserServiceImpl;
 import com.idibros.study.service.impl.UserServiceImpl;
 import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +25,38 @@ import java.sql.SQLException;
  */
 @Configuration
 public class DaoFactory {
+
+    /**
+     * 자동 프록시 팩토리를 활용하기 위해서 테스트 유저 서비스도 빈으로 등록해야 할 것 같다.
+     * @return
+     */
+    @Bean
+    public UserService testUserServiceImpl () {
+        return new TestUserServiceImpl("foo21");
+    }
+
+    /**
+     * 어드바이저를 이용하는 자동 프록시 생성기 빈을 등록한다.
+     */
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator () {
+        return new DefaultAdvisorAutoProxyCreator();
+    }
+
+    /**
+     * 포인트컷을 등록한다.
+     * 포인트컷, 어드바이스, 어드바이저를 빈으로 등록하면 자동 프록시 생성기가 DI해서 사용하는 것 같다.
+     * 포인트컷의 설정 정보에 대상 클래스와 메소드를 정의했기 때문에 이를 참조하는 듯 하다.
+     * 그래서 별도로 타겟 지정 없이도 트랜젝션 기능이 잘 동작한다.
+     * @return
+     */
+    @Bean
+    public NameMatchClassMethodPointcut nameMatchClassMethodPointcut () {
+        NameMatchClassMethodPointcut nameMatchClassMethodPointcut = new NameMatchClassMethodPointcut();
+        nameMatchClassMethodPointcut.setMappedName("*ServiceImpl");
+        nameMatchClassMethodPointcut.setMappedName("upgrade*");
+        return nameMatchClassMethodPointcut;
+    }
 
     @Bean
     public ProxyFactoryBean proxyFactoryBean() throws SQLException {
@@ -62,9 +97,7 @@ public class DaoFactory {
 
     @Bean
     public UserService userServiceImpl() throws SQLException {
-        UserServiceImpl userService = new UserServiceImpl();
-        userService.setUserDao(userDao());
-        return userService;
+        return new UserServiceImpl();
     }
 
     @Bean

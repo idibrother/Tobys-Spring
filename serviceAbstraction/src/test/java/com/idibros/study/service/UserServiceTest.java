@@ -10,9 +10,11 @@ import com.idibros.study.reflection.Hello;
 import com.idibros.study.reflection.impl.HelloTarget;
 import com.idibros.study.reflection.proxy.TransactionHandler;
 import com.idibros.study.reflection.proxy.UppercaseHandler;
+import com.idibros.study.service.impl.TestUserServiceImpl;
 import com.idibros.study.service.impl.UserServiceImpl;
 import com.idibros.study.service.impl.UserServiceTx;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
@@ -58,6 +60,9 @@ public class UserServiceTest {
     @Autowired
     private ProxyFactoryBean proxyFactoryBean;
 
+    @Autowired
+    private UserService testUserServiceImpl;
+
     private User user1;
 
     private User user2;
@@ -95,7 +100,7 @@ public class UserServiceTest {
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        TestUserService testUserService = new TestUserService("foo21");
+        TestUserServiceImpl testUserService = new TestUserServiceImpl("foo21");
         testUserService.setUserDao(userDao);
 
         /**
@@ -152,12 +157,13 @@ public class UserServiceTest {
     }
 
     @Test
+    @Ignore
     public void upgradeLevels_목_객체_활용() throws SQLException, ClassNotFoundException {
         /**
          * userDao 목 객체를 만들어서 userService에 설정
          */
         UserDao userDaoMock = mock(UserDao.class);
-        ((UserServiceImpl)userServiceImpl).setUserDao(userDaoMock);
+        ((UserServiceImpl) userServiceImpl).setUserDao(userDaoMock);
 
         ArrayList<User> users = new ArrayList<>();
         users.add(user1);
@@ -215,7 +221,7 @@ public class UserServiceTest {
         /**
          * 앞에서의 예제와 동일하게 특정 유저에 대한 upgradeLevel 실행 할 때 예외를 발생시키는 테스트용 UserService를 사용한다.
          */
-        TestUserService testUserService = new TestUserService("foo21");
+        TestUserServiceImpl testUserService = new TestUserServiceImpl("foo21");
         testUserService.setUserDao(userDao);
 
         TransactionHandler transactionHendler = new TransactionHandler();
@@ -249,7 +255,7 @@ public class UserServiceTest {
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        TestUserService testUserService = new TestUserService("foo21");
+        TestUserServiceImpl testUserService = new TestUserServiceImpl("foo21");
         testUserService.setUserDao(userDao);
 
         TxProxyFactoryBean txProxyFactoryBean = (TxProxyFactoryBean) applicationContext.getBean("&userService");
@@ -262,7 +268,7 @@ public class UserServiceTest {
 
         try {
             txUserService.upgradeLevels();
-        } catch (TestUserService.TestUserServiceException e) {
+        } catch (TestUserServiceImpl.TestUserServiceException e) {
 
         }
 
@@ -362,7 +368,7 @@ public class UserServiceTest {
         userDao.add(this.user3);
         userDao.add(this.user4);
 
-        TestUserService testUserService = new TestUserService("foo21");
+        TestUserServiceImpl testUserService = new TestUserServiceImpl("foo21");
         testUserService.setUserDao(userDao);
         /**
          * proxyFactoryBean을 사용하면 target이 구현한 모든 인터페이스를 대상으로 부가기능 적용 설정이 가능하다.
@@ -372,7 +378,28 @@ public class UserServiceTest {
         UserService proxiedUserService = (UserService) proxyFactoryBean.getObject();
         try {
             proxiedUserService.upgradeLevels();
-        } catch (TestUserService.TestUserServiceException e) {
+        } catch (TestUserServiceImpl.TestUserServiceException e) {
+
+        }
+
+        checkLevelUpgraded(user2, false);
+    }
+
+    @Test
+    @DirtiesContext
+    public void applyAutoProxyFactoryBeanToUserService () throws SQLException, ClassNotFoundException {
+        userDao.add(this.user1);
+        userDao.add(this.user2);
+        userDao.add(this.user3);
+        userDao.add(this.user4);
+
+        /**
+         * 자동 프록시 생성기에서 정의한 클래스 필터를 적용한 포인트컷의 정의 내용중 클래스명이 *ServiceImpl이기 때문에
+         * TestUserService으로는 테스트가 불가하기 때문에 변경한다.
+         */
+        try {
+            testUserServiceImpl.upgradeLevels();
+        } catch (TestUserServiceImpl.TestUserServiceException e) {
 
         }
 

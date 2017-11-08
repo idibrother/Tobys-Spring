@@ -1,4 +1,4 @@
-package com.idibros.study.service;
+package com.idibros.study.service.impl;
 
 import com.idibros.study.dao.UserDao;
 import com.idibros.study.dto.User;
@@ -8,7 +8,7 @@ import lombok.Setter;
 /**
  * Created by dongba on 2017-10-18.
  */
-public class TestUserService extends UserServiceImpl {
+public class TestUserServiceImpl extends UserServiceImpl {
 
     /**
      * 트랜젝션 테스트를 위해서 특정 유저의 레벨을 업그레이드 하는 중간에 예외가 발생하는 상황을 고의로 만들 것이다.
@@ -17,7 +17,7 @@ public class TestUserService extends UserServiceImpl {
      */
     private String id;
 
-    public TestUserService(String id) {
+    public TestUserServiceImpl(String id) {
         this.id = id;
     }
 

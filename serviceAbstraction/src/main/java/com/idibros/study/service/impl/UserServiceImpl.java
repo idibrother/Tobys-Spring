@@ -5,6 +5,7 @@ import com.idibros.study.dto.Level;
 import com.idibros.study.dto.User;
 import com.idibros.study.service.UserService;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     public static final int MIN_RECOMMEND_FOR_GOLD = 30;
 
+    @Autowired
     @Setter
     private UserDao userDao;
 
